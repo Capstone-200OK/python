@@ -1,182 +1,134 @@
-import re
+# image_data_processing.py
+
 import os
 import time
-from nltk.tokenize import word_tokenize
-from nltk.corpus import stopwords
-from nltk.stem import WordNetLemmatizer
+import base64
 from rich.progress import Progress, TextColumn, BarColumn, TimeElapsedColumn
-from data_processing_common import sanitize_filename  # Import sanitize_filename
 
-def get_text_from_generator(generator):
-    """Extract text from the generator response."""
-    response_text = ""
-    try:
-        while True:
-            response = next(generator)
-            choices = response.get('choices', [])
-            for choice in choices:
-                delta = choice.get('delta', {})
-                if 'content' in delta:
-                    response_text += delta['content']
-    except StopIteration:
-        pass
-    return response_text
+# 사용자 예시 코드 기반 (from openai import OpenAI)
+from openai import OpenAI
 
-def process_single_image(image_path, image_inference, text_inference, silent=False, log_file=None):
-    """Process a single image file to generate metadata."""
+def encode_image_to_data_url(image_path):
+    """
+    Reads the local image file, base64-encodes it,
+    and returns a data URL (e.g. 'data:image/jpeg;base64,<encoded>').
+    For simplicity, we assume jpeg.
+    If you have png, you may want to set 'image/png' etc. accordingly.
+    """
+    with open(image_path, "rb") as f:
+        encoded = base64.b64encode(f.read()).decode("utf-8")
+    # 아래는 JPEG이라고 가정
+    data_url = f"data:image/jpeg;base64,{encoded}"
+    return data_url
+
+def analyze_image_with_gpt_data_url(data_url):
+    """
+    Sends a data URL image to GPT for analysis using the user snippet approach.
+    """
+    client = OpenAI()
+    completion = client.chat.completions.create(
+        model="gpt-4o",  # 사용자 예시: gpt-4o
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {"type": "text", "text": "What's in this image?"},
+                    {
+                        "type": "image_url",
+                        "image_url": {
+                            "url": data_url,
+                        },
+                    },
+                ],
+            }
+        ],
+    )
+    # GPT 응답 텍스트
+    return completion.choices[0].message.content
+
+def generate_folder_and_filename_from_gpt_description(description):
+    """
+    GPT에서 받은 텍스트(이미지 설명)를 기반으로,
+    간단 규칙으로 폴더명, 파일명을 만들어내는 예시 로직.
+    """
+    import re
+    words = re.findall(r"[a-zA-Z]+", description)
+    folder_words = words[:2] if words else ["images"]
+    file_words = words[:3] if words else ["image"]
+
+    foldername = "_".join(word.lower() for word in folder_words)
+    filename = "_".join(word.lower() for word in file_words)
+
+    if not foldername:
+        foldername = "images"
+    if not filename:
+        filename = "image"
+    return foldername, filename
+
+def process_single_image(image_path, silent=False, log_file=None):
+    """
+    1) 로컬 이미지 파일을 data URL로 변환 (base64).
+    2) GPT에 전송하여 이미지 설명 획득.
+    3) 설명을 바탕으로 폴더/파일명 생성.
+    4) 결과(dict) 반환.
+    """
     start_time = time.time()
 
-    # Create a Progress instance for this file
     with Progress(
         TextColumn("[progress.description]{task.description}"),
         BarColumn(),
         TimeElapsedColumn()
     ) as progress:
         task_id = progress.add_task(f"Processing {os.path.basename(image_path)}", total=1.0)
-        foldername, filename, description = generate_image_metadata(image_path, progress, task_id, image_inference, text_inference)
-    
+
+        # 1) base64로 인코딩 후 data URL 만들기
+        data_url = encode_image_to_data_url(image_path)
+
+        # 2) GPT 분석
+        gpt_description = analyze_image_with_gpt_data_url(data_url)
+
+        # 3) 폴더명/파일명 생성
+        foldername, filename = generate_folder_and_filename_from_gpt_description(gpt_description)
+
+        progress.update(task_id, advance=1.0)
+
     end_time = time.time()
     time_taken = end_time - start_time
 
-    message = f"File: {image_path}\nTime taken: {time_taken:.2f} seconds\nDescription: {description}\nFolder name: {foldername}\nGenerated filename: {filename}\n"
+    message = (
+        f"File: {image_path}\n"
+        f"Time taken: {time_taken:.2f} seconds\n"
+        f"GPT Description: {gpt_description}\n"
+        f"Folder name: {foldername}\n"
+        f"Generated filename: {filename}\n"
+    )
     if silent:
         if log_file:
             with open(log_file, 'a') as f:
                 f.write(message + '\n')
     else:
         print(message)
+
     return {
-        'file_path': image_path,
-        'foldername': foldername,
-        'filename': filename,
-        'description': description
+        "file_path": image_path,
+        "foldername": foldername,
+        "filename": filename,
+        "description": gpt_description
     }
 
-def process_image_files(image_paths, image_inference, text_inference, silent=False, log_file=None):
-    """Process image files sequentially."""
+def process_image_files(image_paths, silent=False, log_file=None):
+    """
+    (A) image_paths 안에 있는 로컬 이미지 파일들을
+    순차적으로 GPT에 전달하여 분석하는 함수.
+    (B) base64 인코딩 + data URL를 생성 -> GPT 전송
+    """
     data_list = []
     for image_path in image_paths:
-        data = process_single_image(image_path, image_inference, text_inference, silent=silent, log_file=log_file)
+        # 이미지 처리
+        data = process_single_image(
+            image_path=image_path,
+            silent=silent,
+            log_file=log_file
+        )
         data_list.append(data)
     return data_list
-
-def generate_image_metadata(image_path, progress, task_id, image_inference, text_inference):
-    """Generate description, folder name, and filename for an image file."""
-
-    # Total steps in processing an image
-    total_steps = 3
-
-    # Step 1: Generate description using image_inference
-    description_prompt = "Please provide a detailed description of this image, focusing on the main subject and any important details."
-    description_generator = image_inference._chat(description_prompt, image_path)
-    description = get_text_from_generator(description_generator).strip()
-    progress.update(task_id, advance=1 / total_steps)
-
-    # Step 2: Generate filename using text_inference
-    filename_prompt = f"""Based on the description below, generate a specific and descriptive filename for the image.
-Limit the filename to a maximum of 3 words. Use nouns and avoid starting with verbs like 'depicts', 'shows', 'presents', etc.
-Do not include any data type words like 'image', 'jpg', 'png', etc. Use only letters and connect words with underscores.
-
-Description: {description}
-
-Example:
-Description: A photo of a sunset over the mountains.
-Filename: sunset_over_mountains
-
-Now generate the filename.
-
-Output only the filename, without any additional text.
-
-Filename:"""
-    filename_response = text_inference.create_completion(filename_prompt)
-    filename = filename_response['choices'][0]['text'].strip()
-    # Remove 'Filename:' prefix if present
-    filename = re.sub(r'^Filename:\s*', '', filename, flags=re.IGNORECASE).strip()
-    progress.update(task_id, advance=1 / total_steps)
-
-    # Step 3: Generate folder name from description using text_inference
-    foldername_prompt = f"""Based on the description below, generate a general category or theme that best represents the main subject of this image.
-This will be used as the folder name. Limit the category to a maximum of 2 words. Use nouns and avoid verbs.
-Do not include specific details, words from the filename, or any generic terms like 'untitled' or 'unknown'.
-
-Description: {description}
-
-Examples:
-1. Description: A photo of a sunset over the mountains.
-   Category: landscapes
-
-2. Description: An image of a smartphone displaying a storage app with various icons and information.
-   Category: technology
-
-3. Description: A close-up of a blooming red rose with dew drops.
-   Category: nature
-
-Now generate the category.
-
-Output only the category, without any additional text.
-
-Category:"""
-    foldername_response = text_inference.create_completion(foldername_prompt)
-    foldername = foldername_response['choices'][0]['text'].strip()
-    # Remove 'Category:' prefix if present
-    foldername = re.sub(r'^Category:\s*', '', foldername, flags=re.IGNORECASE).strip()
-    progress.update(task_id, advance=1 / total_steps)
-
-    # Remove any unwanted words and stopwords
-    unwanted_words = set([
-        'the', 'and', 'based', 'generated', 'this', 'is', 'filename', 'file', 'image', 'picture', 'photo',
-        'folder', 'category', 'output', 'only', 'below', 'text', 'jpg', 'png', 'jpeg', 'gif', 'bmp', 'svg',
-        'logo', 'in', 'on', 'of', 'with', 'by', 'for', 'to', 'from', 'a', 'an', 'as', 'at', 'red', 'blue',
-        'green', 'color', 'colors', 'colored', 'text', 'graphic', 'graphics', 'main', 'subject', 'important',
-        'details', 'description', 'depicts', 'show', 'shows', 'display', 'illustrates', 'presents', 'features',
-        'provides', 'covers', 'includes', 'demonstrates', 'describes'
-    ])
-    stop_words = set(stopwords.words('english'))
-    all_unwanted_words = unwanted_words.union(stop_words)
-    lemmatizer = WordNetLemmatizer()
-
-    # Function to clean and process the AI output
-    def clean_ai_output(text, max_words):
-        # Remove file extensions and special characters
-        text = re.sub(r'\.\w{1,4}$', '', text)  # Remove file extensions like .jpg, .png
-        text = re.sub(r'[^\w\s]', ' ', text)  # Remove special characters
-        text = re.sub(r'\d+', '', text)  # Remove digits
-        text = text.strip()
-        # Split concatenated words (e.g., 'GoogleChrome' -> 'Google Chrome')
-        text = re.sub(r'([a-z])([A-Z])', r'\1 \2', text)
-        # Tokenize and lemmatize words
-        words = word_tokenize(text)
-        words = [word.lower() for word in words if word.isalpha()]
-        words = [lemmatizer.lemmatize(word) for word in words]
-        # Remove unwanted words and duplicates
-        filtered_words = []
-        seen = set()
-        for word in words:
-            if word not in all_unwanted_words and word not in seen:
-                filtered_words.append(word)
-                seen.add(word)
-        # Limit to max words
-        filtered_words = filtered_words[:max_words]
-        return '_'.join(filtered_words)
-
-    # Process filename
-    filename = clean_ai_output(filename, max_words=3)
-    if not filename or filename.lower() in ('untitled', ''):
-        # Use keywords from the description
-        filename = clean_ai_output(description, max_words=3)
-    if not filename:
-        filename = 'image_' + os.path.splitext(os.path.basename(image_path))[0]
-
-    sanitized_filename = sanitize_filename(filename, max_words=3)
-
-    # Process foldername
-    foldername = clean_ai_output(foldername, max_words=2)
-    if not foldername or foldername.lower() in ('untitled', ''):
-        # Attempt to extract keywords from the description
-        foldername = clean_ai_output(description, max_words=2)
-        if not foldername:
-            foldername = 'images'
-
-    sanitized_foldername = sanitize_filename(foldername, max_words=2)
-
-    return sanitized_foldername, sanitized_filename, description

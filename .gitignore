@@ -21,3 +21,4 @@ venv/
 # Ignore example output files
 ../../Users/jhkim/PycharmProjects/PythonProject/organized_folder/
 operation_log.txt
+.env
