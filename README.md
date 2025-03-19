@@ -49,6 +49,11 @@ After:
 7 directories, 11 files
 ```
 
+## basic enviroment 
+
+- Anaconda prompt
+- pycharm
+
 ## Supported File Types 📁
 
 - **Images:** `.png`, `.jpg`, `.jpeg`, `.gif`, `.bmp`
