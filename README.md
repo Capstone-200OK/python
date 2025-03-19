@@ -49,7 +49,7 @@ After:
 7 directories, 11 files
 ```
 
-## basic enviroment 
+## Basic enviroment 
 
 - Anaconda prompt
 - pycharm
