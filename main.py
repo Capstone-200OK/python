@@ -1,5 +1,6 @@
 import os
 import time
+import nltk
 
 from file_utils import (
     display_directory_tree,
@@ -21,6 +22,8 @@ from text_data_processing import (
 from image_data_processing import (
     process_image_files
 )
+
+nltk.download('averaged_perceptron_tagger_eng')
 
 def ensure_nltk_data():
     """
