@@ -4,15 +4,22 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="35c0ef9d-1514-4f42-a209-0fc7428d67cd" name="변경" comment="gpt model change">
+    <list default="true" id="35c0ef9d-1514-4f42-a209-0fc7428d67cd" name="변경" comment="&lt;perf&gt; (juho) image_data_processing.py 성능 개선 아직 미완성 folder name file name 적절히 만들어지않는중 category 분류 성공">
+      <change afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/image_data_processing.py" beforeDir="false" afterPath="$PROJECT_DIR$/image_data_processing.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
     <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
   </component>
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
@@ -101,7 +108,11 @@
       <workItem from="1742969133441" duration="8872000" />
       <workItem from="1743043422936" duration="14815000" />
       <workItem from="1743140315989" duration="4058000" />
-      <workItem from="1743144547535" duration="8007000" />
+      <workItem from="1743144547535" duration="8428000" />
+      <workItem from="1743417357858" duration="7502000" />
+      <workItem from="1743659080285" duration="4421000" />
+      <workItem from="1743857297420" duration="9875000" />
+      <workItem from="1743990587069" duration="1299000" />
     </task>
     <task id="LOCAL-00001" summary="commit">
       <option name="closed" value="true" />
@@ -119,7 +130,15 @@
       <option name="project" value="LOCAL" />
       <updated>1742399418400</updated>
     </task>
-    <option name="localTasksCounter" value="3" />
+    <task id="LOCAL-00003" summary="&lt;perf&gt; (juho) image_data_processing.py 성능 개선 아직 미완성 folder name file name 적절히 만들어지않는중 category 분류 성공">
+      <option name="closed" value="true" />
+      <created>1743152945413</created>
+      <option name="number" value="00003" />
+      <option name="presentableId" value="LOCAL-00003" />
+      <option name="project" value="LOCAL" />
+      <updated>1743152945413</updated>
+    </task>
+    <option name="localTasksCounter" value="4" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -139,11 +158,12 @@
   <component name="VcsManagerConfiguration">
     <MESSAGE value="commit" />
     <MESSAGE value="gpt model change" />
-    <option name="LAST_COMMIT_MESSAGE" value="gpt model change" />
+    <MESSAGE value="&lt;perf&gt; (juho) image_data_processing.py 성능 개선 아직 미완성 folder name file name 적절히 만들어지않는중 category 분류 성공" />
+    <option name="LAST_COMMIT_MESSAGE" value="&lt;perf&gt; (juho) image_data_processing.py 성능 개선 아직 미완성 folder name file name 적절히 만들어지않는중 category 분류 성공" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/PythonProject$image_data_processing.coverage" NAME="image_data_processing 커버리지 결과" MODIFIED="1743046322581" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/PythonProject$main.coverage" NAME="main 커버리지 결과" MODIFIED="1743152772757" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/PythonProject$main.coverage" NAME="main 커버리지 결과" MODIFIED="1743868596841" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/PythonProject$gpt_utils.coverage" NAME="gpt_utils 커버리지 결과" MODIFIED="1742399202702" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
