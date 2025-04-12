@@ -58,7 +58,7 @@ def process_files_by_date(file_paths, output_path, dry_run=False, silent=False, 
         operations.append(operation)
     return operations
 
-def process_files_by_type(file_paths, output_path, dry_run=False, silent=False, log_file=None):
+def process_files_by_type(file_infos, output_path, dry_run=False, silent=False, log_file=None):
     """Process files to organize them by type, first separating into text-based and image-based files."""
     operations = []
 
@@ -66,7 +66,8 @@ def process_files_by_type(file_paths, output_path, dry_run=False, silent=False, 
     image_extensions = ('.png', '.jpg', '.jpeg', '.gif', '.bmp', '.tiff')
     text_extensions = ('.txt', '.md', '.docx', '.doc', '.pdf', '.xls', '.xlsx', '.epub', '.mobi', '.azw', '.azw3')
 
-    for file_path in file_paths:
+    for file_info in file_infos:
+        file_path = file_info.get("file_path")
         # Exclude hidden files (additional safety)
         if os.path.basename(file_path).startswith('.'):
             continue
@@ -115,6 +116,10 @@ def process_files_by_type(file_paths, output_path, dry_run=False, silent=False, 
             'source': file_path,
             'destination': new_file_path,
             'link_type': link_type,
+            'fileId': file_info.get("fileId"),
+            'name': file_info.get("name"),
+            'fileType': file_info.get("fileType"),
+            'size': file_info.get("size")
         }
         operations.append(operation)
 
@@ -147,7 +152,7 @@ def compute_operations(data_list, new_path, renamed_files, processed_files):
 
         # Decide whether to use hardlink or symlink
         link_type = 'hardlink'  # Assume hardlink for now
-
+        file_id = data.get("fileId")
         # Record the operation
         operation = {
             'source': file_path,
