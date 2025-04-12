@@ -1,11 +1,44 @@
 # app.py
 import os
+import requests
+import openai
 from flask import Flask, request, jsonify
 from text_data_processing import process_single_text_file
 from image_data_processing import process_single_image
 from data_processing_common import sanitize_filename
+from main import get_folder_data, do_auto_classification  # 예: main.py에 구현
 
 app = Flask(__name__)
+
+BASE_URL = "http://localhost:8080"
+@app.route('/organize_folder', methods=['POST'])
+def organize_folder():
+    """
+    1) Spring으로부터 { "folderId": 2, "mode": "content" } 등의 데이터를 받음
+    2) get_folder_data(folderId)로 폴더 트리 JSON을 조회
+    3) do_auto_classification(folder_tree, mode) 호출
+    4) 결과 OrganizeResultDTO를 Spring의 /organize/result로 전송
+    """
+    data = request.json
+    folder_id = data['folderId']
+    mode = data.get("mode", "content")  # mode 기본값은 "content"
+
+    # A) 폴더 트리 조회 (Spring API 호출)
+    folder_tree = get_folder_data(folder_id)
+
+    # B) 자동 분류 실행 (mode에 따라)
+    result_dict = do_auto_classification(folder_tree, mode=mode, output_path="/organized")
+    print("Auto-classification result:")
+    print(result_dict)
+
+    # C) 결과 Spring으로 전송
+    response = requests.post(f"{BASE_URL}/organize/result", json=result_dict)
+    if response.status_code == 200:
+        return jsonify({"message": "Organize done", "springResponse": response.json()})
+    else:
+        return jsonify({"message": "Organize done, but error sending to spring",
+                        "status": response.status_code}), 500
+
 
 @app.route('/classify', methods=['POST'])
 def classify_file():

@@ -145,6 +145,113 @@ def ensure_folder_hierarchy(user_id, full_path):
 
     return current_parent_id
 
+def get_folder_data(folder_id):
+    url = f"{BASE_URL}/folder/hierarchy/{folder_id}"
+    r = requests.get(url)
+    r.raise_for_status()
+    print("r.json(): {}", format(r.json()))
+    return r.json()
+
+def mark_folder_deleted(user_id, folder_id):
+    url = f"{BASE_URL}/folder/delete"  # 서버와 협의된 엔드포인트
+    payload = {
+        "userId": user_id,
+        "folderId": folder_id,
+        "isDeleted": True
+    }
+    try:
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            print(f"[SUCCESS] Folder {folder_id} marked as deleted in DB.")
+        else:
+            print(f"[ERROR] Could not mark folder {folder_id} as deleted. Status={response.status_code}, Body={response.text}")
+    except Exception as e:
+        print(f"[EXCEPTION] While marking folder {folder_id} as deleted: {e}")
+
+def extract_files_from_tree(folder_tree):
+    """
+    폴더 트리 JSON(예: FolderDTO 구조)에서 모든 파일의 정보를 재귀적으로 추출한다.
+    각 파일 정보는 {"file_path": ..., "fileType": ..., "name": ...} 구조로 구성.
+    """
+    files = []
+    if "files" in folder_tree:
+        for f in folder_tree["files"]:
+            files.append({
+                "fileId": f.get("id"),
+                "file_path": f.get("filePath"),
+                "fileType": f.get("fileType", "").lower(),
+                "name": f.get("name")
+            })
+    if "subFolders" in folder_tree:
+        for sub in folder_tree["subFolders"]:
+            files.extend(extract_files_from_tree(sub))
+    return files
+
+def do_auto_classification(folder_tree, mode="type", output_path="/organized"):
+    """
+    folder_tree: Spring Boot에서 전달받은 폴더 트리 JSON (FolderDTO 구조)
+    mode: "content", "date", "type" 중 하나
+         - content: 파일 내용 기반 (GPT로 이미지와 텍스트 각각 처리)
+         - date: 파일 수정일 등 날짜 기준 분류
+         - type: 파일 확장자 등 유형 기준 분류
+    output_path: 새로 정리할 기준 루트 경로
+
+    반환: OrganizedResultDTO 형태의 dict
+             { "folderId": ..., "summary": ..., "operations": [...] }
+    """
+    # 1) folder_tree로부터 모든 파일 정보 추출 (재귀적으로)
+    print("folder_tree: {}".format(folder_tree))
+    file_list = extract_files_from_tree(folder_tree)
+    print("file_list: {}".format(file_list))
+    operations = []
+    # 각 모드에 따라 기존 구현 함수 호출
+    if mode == "content":
+        # content 모드: GPT 기반 이미지/텍스트 분리 처리
+        file_paths = [f["file_path"] for f in file_list if f["file_path"]]
+        # 분류: 이미지와 텍스트 파일 분리 (이미 존재하는 separate_files_by_type 사용)
+        image_files, text_files = separate_files_by_type(file_paths)
+
+        # 텍스트 파일의 경우 실제 내용 읽기
+        text_tuples = []
+        for fp in text_files:
+            try:
+                with open(fp, "r", encoding="utf-8", errors="ignore") as f:
+                    text_content = f.read()
+            except Exception as e:
+                text_content = None
+            if text_content:
+                text_tuples.append((fp, text_content))
+
+        data_images = process_image_files(image_files, silent=True, log_file=None)
+        data_texts = process_text_files(text_tuples, silent=True, log_file=None)
+        all_data = data_images + data_texts
+        renamed_files = set()
+        processed_files = set()
+        operations = compute_operations(all_data, output_path, renamed_files, processed_files)
+
+    elif mode == "date":
+        # date 모드: 날짜 기준 분류
+        file_paths = [f["file_path"] for f in file_list if f["file_path"]]
+        operations = process_files_by_date(file_paths, output_path, dry_run=False, silent=True, log_file=None)
+
+    elif mode == "type":
+        # type 모드: 확장자, 파일 유형 기준 분류
+        # file_paths = [f["file_path"] for f in file_list if f["file_path"]]
+        operations = process_files_by_type(file_list, output_path, dry_run=False, silent=True, log_file=None)
+    else:
+        raise ValueError("Invalid mode. Choose 'content', 'date', or 'type'.")
+
+    overall_summary = f"Auto-classification ({mode} mode) completed for folder '{folder_tree.get('name')}'. {len(operations)} files processed."
+
+    result_dict = {
+        "folderId": folder_tree.get("id"),
+        "summary": overall_summary,
+        "operations": operations
+    }
+    print("result: {}", format(result_dict))
+    print("operation: {} ", format(operations))
+    return result_dict
+
 
 def send_operations_to_spring(operations, user_id):
     """
@@ -190,21 +297,40 @@ def send_operations_to_spring(operations, user_id):
 
 def main():
     ensure_nltk_data()
-
     dry_run = True
 
     print("-" * 50)
-    print("NOTE: Silent mode logs all outputs to a text file instead of displaying them.")
+    print("NOTE: Silent mode logs outputs to a text file instead of displaying them.")
     silent_mode = get_yes_no("Would you like to enable silent mode? (yes/no): ")
-    if silent_mode:
-        log_file = 'operation_log.txt'
-    else:
-        log_file = None
+    log_file = 'operation_log.txt' if silent_mode else None
 
+    # 여기서 추가: UI 방식으로 폴더 선택 시, 폴더 경로 대신 Spring DB의 folderId로부터
+    # 폴더 트리 정보를 가져와 Python에서 자동분류를 시작하는 옵션을 둘 수 있음.
+    use_db_folder = get_yes_no("Do you want to organize based on a DB folder? (yes/no): ")
+    if use_db_folder:
+        folder_id = int(input("Enter the DB folder ID to organize: "))
+        folder_tree = get_folder_data(folder_id)
+
+        # do_auto_classification(folder_tree)는 위에서 구현한 함수로, 폴더 트리를 기반으로 파일 이동 등 작업을 결정
+        result_dict = do_auto_classification(folder_tree) #, mode, output_path)
+        print("Auto-classification Result:")
+        print(result_dict)
+        # 최종 결과를 Spring에 전송
+        spring_response = requests.post(f"{BASE_URL}/organize/result", json=result_dict)
+        if spring_response.status_code == 200:
+            try:
+                spring_resp = spring_response.json()
+            except Exception as e:
+                spring_resp = spring_response.text
+            print("Final result sent to Spring:", spring_resp)
+        else:
+            print("Error sending final result to Spring:", spring_response.status_code, spring_response.text)
+        return  # DB 기반 분류 완료 후 종료
+"""
+    # 기존 로컬 경로 처리
     while True:
         if not silent_mode:
             print("-" * 50)
-
         input_path = input("Enter the path of the directory you want to organize: ").strip()
         while not os.path.exists(input_path):
             message = f"Input path {input_path} does not exist. Please enter a valid path."
@@ -214,7 +340,6 @@ def main():
             else:
                 print(message)
             input_path = input("Enter the path of the directory you want to organize: ").strip()
-
         message = f"Input path recognized: {input_path}"
         if silent_mode and log_file:
             with open(log_file, 'a') as f:
@@ -228,7 +353,6 @@ def main():
         output_path = input("Enter the path to store organized files/folders (press Enter to use 'organized_folder'): ").strip()
         if not output_path:
             output_path = os.path.join(os.path.dirname(input_path), 'organized_folder')
-
         message = f"Output path set to: {output_path}"
         if silent_mode and log_file:
             with open(log_file, 'a') as f:
@@ -242,7 +366,6 @@ def main():
         start_time = time.time()
         file_paths = collect_file_paths(input_path)
         end_time = time.time()
-
         message = f"Time taken to load file paths: {end_time - start_time:.2f} seconds"
         if silent_mode and log_file:
             with open(log_file, 'a') as f:
@@ -256,149 +379,102 @@ def main():
             display_directory_tree(input_path)
             print("*" * 50)
 
-        while True:
-            mode = get_mode_selection()
+        # 모드 선택: Content, Date, Type
+        mode = get_mode_selection()
+        if mode == 'content':
+            image_files, text_files = separate_files_by_type(file_paths)
+            text_tuples = []
+            for fp in text_files:
+                text_content = read_file_data(fp)
+                if text_content is None:
+                    msg = f"Unsupported or unreadable text file: {fp}"
+                    if silent_mode and log_file:
+                        with open(log_file, 'a') as f:
+                            f.write(msg + '\n')
+                    else:
+                        print(msg)
+                    continue
+                text_tuples.append((fp, text_content))
+            data_images = process_image_files(image_files, silent=silent_mode, log_file=log_file)
+            data_texts = process_text_files(text_tuples, silent=silent_mode, log_file=log_file)
+            renamed_files = set()
+            processed_files = set()
+            all_data = data_images + data_texts
+            operations = compute_operations(all_data, output_path, renamed_files, processed_files)
+        elif mode == 'date':
+            operations = process_files_by_date(file_paths, output_path, dry_run=False, silent=silent_mode, log_file=log_file)
+            print(operations)
+        elif mode == 'type':
+            operations = process_files_by_type(file_paths, output_path, dry_run=False, silent=silent_mode, log_file=log_file)
+            print(operations)
+        else:
+            print("Invalid mode selected.")
+            return
 
-            if mode == 'content':
-                # Separate images and text
-                image_files, text_files = separate_files_by_type(file_paths)
-
-                # Prepare text input for GPT
-                text_tuples = []
-                for fp in text_files:
-                    text_content = read_file_data(fp)
-                    if text_content is None:
-                        msg = f"Unsupported or unreadable text file: {fp}"
-                        if silent_mode and log_file:
-                            with open(log_file, 'a') as f:
-                                f.write(msg + '\n')
-                        else:
-                            print(msg)
-                        continue
-                    text_tuples.append((fp, text_content))
-
-                # (2) Process images with GPT-based approach (requires image_url_map)
-                data_images = process_image_files(
-                    image_files,
-                    silent=silent_mode,
-                    log_file=log_file
-                )
-
-                # (3) Process text files with GPT
-                data_texts = process_text_files(
-                    text_tuples,
-                    silent=silent_mode,
-                    log_file=log_file
-                )
-
-                renamed_files = set()
-                processed_files = set()
-                all_data = data_images + data_texts
-
-                operations = compute_operations(
-                    all_data,
-                    output_path,
-                    renamed_files,
-                    processed_files
-                )
-
-            elif mode == 'date':
-                operations = process_files_by_date(
-                    file_paths,
-                    output_path,
-                    dry_run=False,
-                    silent=silent_mode,
-                    log_file=log_file
-                )
-                print(operations)
-            elif mode == 'type':
-                operations = process_files_by_type(
-                    file_paths,
-                    output_path,
-                    dry_run=False,
-                    silent=silent_mode,
-                    log_file=log_file
-                )
-                print(operations)
-            else:
-                print("Invalid mode selected.")
-                return
-
+        print("-" * 50)
+        message = "Proposed directory structure:"
+        if silent_mode and log_file:
+            with open(log_file, 'a') as f:
+                f.write(message + '\n')
+        else:
+            print(message)
+            print(os.path.abspath(output_path))
+            def simulate_tree(ops, base):
+                t = {}
+                for op in ops:
+                    rel_path = os.path.relpath(op['destination'], base)
+                    parts = rel_path.split(os.sep)
+                    node = t
+                    for p in parts:
+                        if p not in node:
+                            node[p] = {}
+                        node = node[p]
+                return t
+            def print_tree(tree, prefix=''):
+                keys = list(tree.keys())
+                for i, k in enumerate(keys):
+                    symbol = '└── ' if i == len(keys) - 1 else '├── '
+                    print(prefix + symbol + k)
+                    if tree[k]:
+                        extension = '    ' if i == len(keys) - 1 else '│   '
+                        print_tree(tree[k], prefix + extension)
+            simulated = simulate_tree(operations, output_path)
+            print_tree(simulated)
             print("-" * 50)
-            message = "Proposed directory structure:"
+
+        proceed = get_yes_no("Would you like to proceed with these changes? (yes/no): ")
+        if proceed:
+            os.makedirs(output_path, exist_ok=True)
+            msg = "Performing file operations..."
             if silent_mode and log_file:
                 with open(log_file, 'a') as f:
-                    f.write(message + '\n')
+                    f.write(msg + '\n')
             else:
-                print(message)
-                print(os.path.abspath(output_path))
-
-                def simulate_tree(ops, base):
-                    t = {}
-                    for op in ops:
-                        rel_path = os.path.relpath(op['destination'], base)
-                        parts = rel_path.split(os.sep)
-                        node = t
-                        for p in parts:
-                            if p not in node:
-                                node[p] = {}
-                            node = node[p]
-                    return t
-
-                def print_tree(tree, prefix=''):
-                    keys = list(tree.keys())
-                    for i, k in enumerate(keys):
-                        symbol = '└── ' if i == len(keys) - 1 else '├── '
-                        print(prefix + symbol + k)
-                        if tree[k]:
-                            extension = '    ' if i == len(keys) - 1 else '│   '
-                            print_tree(tree[k], prefix + extension)
-
-                simulated = simulate_tree(operations, output_path)
-                print_tree(simulated)
+                print(msg)
+            execute_operations(operations, dry_run=False, silent=silent_mode, log_file=log_file)
+            user_id = 1  # 예시 user_id, 실제는 Spring에서 받아옴
+            send_operations_to_spring(operations, user_id)
+            msg = "The files have been organized successfully."
+            if silent_mode and log_file:
+                with open(log_file, 'a') as f:
+                    f.write("-" * 50 + '\n' + msg + '\n' + "-" * 50 + '\n')
+            else:
                 print("-" * 50)
-
-            proceed = get_yes_no("Would you like to proceed with these changes? (yes/no): ")
-            if proceed:
-                os.makedirs(output_path, exist_ok=True)
-                msg = "Performing file operations..."
-                if silent_mode and log_file:
-                    with open(log_file, 'a') as f:
-                        f.write(msg + '\n')
-                else:
-                    print(msg)
-
-                execute_operations(
-                    operations,
-                    dry_run=False,
-                    silent=silent_mode,
-                    log_file=log_file
-                )
-                user_id = 1 # 예시 user_id는 spring에서 받아오기
-                send_operations_to_spring(operations, user_id)
-
-                msg = "The files have been organized successfully."
-                if silent_mode and log_file:
-                    with open(log_file, 'a') as f:
-                        f.write("-" * 50 + '\n' + msg + '\n' + "-" * 50 + '\n')
-                else:
-                    print("-" * 50)
-                    print(msg)
-                    print("-" * 50)
-                break
+                print(msg)
+                print("-" * 50)
+            break
+        else:
+            another_sort = get_yes_no("Would you like to choose another sorting method? (yes/no): ")
+            if another_sort:
+                continue
             else:
-                another_sort = get_yes_no("Would you like to choose another sorting method? (yes/no): ")
-                if another_sort:
-                    continue
-                else:
-                    print("Operation canceled by the user.")
-                    break
+                print("Operation canceled by the user.")
+                break
 
         another_directory = get_yes_no("Would you like to organize another directory? (yes/no): ")
         if not another_directory:
             break
-
-
+"""
 
 if __name__ == '__main__':
     main()
