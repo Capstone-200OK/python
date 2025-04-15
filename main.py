@@ -475,6 +475,5 @@ def main():
         if not another_directory:
             break
 """
-
 if __name__ == '__main__':
     main()

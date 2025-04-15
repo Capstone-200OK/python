@@ -21,13 +21,13 @@ def organize_folder():
     """
     data = request.json
     folder_id = data['folderId']
-    mode = data.get("mode", "content")  # mode 기본값은 "content"
-
+    mode = data['mode']  # mode 기본값은 "content"
+    output_path = data['output_path']
     # A) 폴더 트리 조회 (Spring API 호출)
     folder_tree = get_folder_data(folder_id)
 
     # B) 자동 분류 실행 (mode에 따라)
-    result_dict = do_auto_classification(folder_tree, mode=mode, output_path="/organized")
+    result_dict = do_auto_classification(folder_tree, mode=mode, output_path=output_path)
     print("Auto-classification result:")
     print(result_dict)
 
