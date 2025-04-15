@@ -98,17 +98,17 @@ def process_files_by_type(file_infos, output_path, dry_run=False, silent=False, 
                 sub_folder = 'ebooks'
             else:
                 sub_folder = 'others'
-            folder_name = os.path.join(top_folder, sub_folder)
+            folder_name = "/".join([top_folder, sub_folder])
 
         else:
             # Other types
             folder_name = 'others'
 
         # Create directory path
-        dir_path = os.path.join(output_path, folder_name)
+        dir_path = "/".join([output_path.strip("/"), folder_name.strip("/")])
         # Prepare new file path
         new_file_name = os.path.basename(file_path)
-        new_file_path = os.path.join(dir_path, new_file_name)
+        new_file_path = "/".join([dir_path, new_file_name])
         # Decide whether to use hardlink or symlink
         link_type = 'hardlink'  # Assume hardlink for now
         # Record the operation

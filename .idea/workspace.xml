@@ -4,12 +4,12 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="35c0ef9d-1514-4f42-a209-0fc7428d67cd" name="변경" comment="&lt;feat&gt; (juho) send to spring feature">
+    <list default="true" id="35c0ef9d-1514-4f42-a209-0fc7428d67cd" name="변경" comment="&lt;feat&gt; (juho) type send to spring">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data_processing_common.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_processing_common.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/image_data_processing.py" beforeDir="false" afterPath="$PROJECT_DIR$/image_data_processing.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/text_data_processing.py" beforeDir="false" afterPath="$PROJECT_DIR$/text_data_processing.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -78,7 +78,7 @@
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
       <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
-      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/app.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
       <option name="EMULATE_TERMINAL" value="false" />
@@ -118,7 +118,10 @@
       <workItem from="1744091987742" duration="3626000" />
       <workItem from="1744175035318" duration="10399000" />
       <workItem from="1744260196662" duration="7049000" />
-      <workItem from="1744351446136" duration="19045000" />
+      <workItem from="1744351446136" duration="19881000" />
+      <workItem from="1744652573300" duration="205000" />
+      <workItem from="1744653641035" duration="734000" />
+      <workItem from="1744661435130" duration="4339000" />
     </task>
     <task id="LOCAL-00001" summary="commit">
       <option name="closed" value="true" />
@@ -152,7 +155,15 @@
       <option name="project" value="LOCAL" />
       <updated>1743993741698</updated>
     </task>
-    <option name="localTasksCounter" value="5" />
+    <task id="LOCAL-00005" summary="&lt;feat&gt; (juho) type send to spring">
+      <option name="closed" value="true" />
+      <created>1744449759538</created>
+      <option name="number" value="00005" />
+      <option name="presentableId" value="LOCAL-00005" />
+      <option name="project" value="LOCAL" />
+      <updated>1744449759538</updated>
+    </task>
+    <option name="localTasksCounter" value="6" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -174,11 +185,12 @@
     <MESSAGE value="gpt model change" />
     <MESSAGE value="&lt;perf&gt; (juho) image_data_processing.py 성능 개선 아직 미완성 folder name file name 적절히 만들어지않는중 category 분류 성공" />
     <MESSAGE value="&lt;feat&gt; (juho) send to spring feature" />
-    <option name="LAST_COMMIT_MESSAGE" value="&lt;feat&gt; (juho) send to spring feature" />
+    <MESSAGE value="&lt;feat&gt; (juho) type send to spring" />
+    <option name="LAST_COMMIT_MESSAGE" value="&lt;feat&gt; (juho) type send to spring" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/PythonProject$image_data_processing.coverage" NAME="image_data_processing 커버리지 결과" MODIFIED="1743046322581" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/PythonProject$main.coverage" NAME="main 커버리지 결과" MODIFIED="1744449280536" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/PythonProject$main.coverage" NAME="main 커버리지 결과" MODIFIED="1744703216713" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/PythonProject$gpt_utils.coverage" NAME="gpt_utils 커버리지 결과" MODIFIED="1742399202702" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>

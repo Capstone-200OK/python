@@ -11,7 +11,7 @@ from rich.progress import Progress, TextColumn, BarColumn, TimeElapsedColumn
 from openai import OpenAI
 from PIL import Image
 from data_processing_common import sanitize_filename
-from gensim.summarization import keywords
+#from gensim.summarization import keywords
 
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
