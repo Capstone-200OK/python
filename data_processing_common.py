@@ -32,21 +32,22 @@ def sanitize_filename(name, max_length=50, max_words=5):
     # Limit length
     return limited_name[:max_length] if limited_name else 'untitled'
 
-def process_files_by_date(file_paths, output_path, dry_run=False, silent=False, log_file=None):
+def process_files_by_date(file_infos, output_path, dry_run=False, silent=False, log_file=None):
     """Process files to organize them by date."""
     operations = []
-    for file_path in file_paths:
+    for file_info in file_infos:
+        file_path = file_info.get('file_path')
         # Get the modification time
         mod_time = os.path.getmtime(file_path)
         # Convert to datetime
         mod_datetime = datetime.datetime.fromtimestamp(mod_time)
-        year = mod_datetime.strftime('%Y')
-        month = mod_datetime.strftime('%B')  # e.g., 'January', or use '%m' for month number
+        year = mod_datetime.strftime('%Y') # e.g. ,'2025'
+        month = mod_datetime.strftime('%m')  # e.g., %B -> 'January','%m' -> 01
         # Create directory path
-        dir_path = os.path.join(output_path, year, month)
+        dir_path = "/".join([output_path, year, month]) # "/"로 구분하여 join
         # Prepare new file path
-        new_file_name = os.path.basename(file_path)
-        new_file_path = os.path.join(dir_path, new_file_name)
+        new_file_name = os.path.basename(file_path) # 파일명 반환
+        new_file_path = "/".join([dir_path, new_file_name])
         # Decide whether to use hardlink or symlink
         link_type = 'hardlink'  # Assume hardlink for now
         # Record the operation
@@ -54,6 +55,10 @@ def process_files_by_date(file_paths, output_path, dry_run=False, silent=False, 
             'source': file_path,
             'destination': new_file_path,
             'link_type': link_type,
+            'fileId': file_info.get("fileId"),
+            'name': file_info.get("name"),
+            'fileType': file_info.get("fileType"),
+            'size': file_info.get("size")
         }
         operations.append(operation)
     return operations
@@ -139,15 +144,15 @@ def compute_operations(data_list, new_path, renamed_files, processed_files):
         new_file_name = data['filename'] + os.path.splitext(file_path)[1]
 
         # Prepare new file path
-        dir_path = os.path.join(new_path, folder_name)
-        new_file_path = os.path.join(dir_path, new_file_name)
+        dir_path = "/".join([new_path, folder_name])
+        new_file_path = "/".join([dir_path, new_file_name])
 
         # Handle duplicates
         counter = 1
         original_new_file_name = new_file_name
         while new_file_path in renamed_files:
             new_file_name = f"{data['filename']}_{counter}" + os.path.splitext(file_path)[1]
-            new_file_path = os.path.join(dir_path, new_file_name)
+            new_file_path = "/".join([dir_path, new_file_name])
             counter += 1
 
         # Decide whether to use hardlink or symlink
