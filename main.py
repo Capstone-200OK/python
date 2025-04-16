@@ -231,8 +231,8 @@ def do_auto_classification(folder_tree, mode="type", output_path="/organized"):
 
     elif mode == "date":
         # date 모드: 날짜 기준 분류
-        file_paths = [f["file_path"] for f in file_list if f["file_path"]]
-        operations = process_files_by_date(file_paths, output_path, dry_run=False, silent=True, log_file=None)
+        #file_paths = [f["file_path"] for f in file_list if f["file_path"]]
+        operations = process_files_by_date(file_list, output_path, dry_run=False, silent=True, log_file=None)
 
     elif mode == "type":
         # type 모드: 확장자, 파일 유형 기준 분류
@@ -326,7 +326,7 @@ def main():
         else:
             print("Error sending final result to Spring:", spring_response.status_code, spring_response.text)
         return  # DB 기반 분류 완료 후 종료
-"""
+
     # 기존 로컬 경로 처리
     while True:
         if not silent_mode:
@@ -474,6 +474,6 @@ def main():
         another_directory = get_yes_no("Would you like to organize another directory? (yes/no): ")
         if not another_directory:
             break
-"""
+
 if __name__ == '__main__':
     main()
