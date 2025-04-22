@@ -149,7 +149,7 @@ def get_folder_data(folder_id):
     url = f"{BASE_URL}/folder/hierarchy/{folder_id}"
     r = requests.get(url)
     r.raise_for_status()
-    print("r.json(): {}", format(r.json()))
+    print("r.json(): ", format(r.json()))
     return r.json()
 
 def mark_folder_deleted(user_id, folder_id):
@@ -180,14 +180,15 @@ def extract_files_from_tree(folder_tree):
                 "fileId": f.get("id"),
                 "file_path": f.get("filePath"),
                 "fileType": f.get("fileType", "").lower(),
-                "name": f.get("name")
+                "name": f.get("name"),
+                "createdAt": f.get("createdAt"),
             })
     if "subFolders" in folder_tree:
         for sub in folder_tree["subFolders"]:
             files.extend(extract_files_from_tree(sub))
     return files
 
-def do_auto_classification(folder_tree, mode="type", output_path="/organized"):
+def do_auto_classification(folder_tree, destination_folder_id, mode="type", output_path="/organized"):
     """
     folder_tree: Spring Boot에서 전달받은 폴더 트리 JSON (FolderDTO 구조)
     mode: "content", "date", "type" 중 하나
@@ -246,6 +247,7 @@ def do_auto_classification(folder_tree, mode="type", output_path="/organized"):
     result_dict = {
         "folderId": folder_tree.get("id"),
         "summary": overall_summary,
+        "destinationFolderId": destination_folder_id,
         "operations": operations
     }
     print("result: {}", format(result_dict))

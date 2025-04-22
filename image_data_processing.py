@@ -136,7 +136,7 @@ Output format (each item on its own line):
         {"role": "user", "content": user_prompt},
     ]
     completion = client.chat.completions.create(
-        model="gpt-4o-mini",
+        model="gpt-4.1-mini",
         messages=messages,
         max_tokens=200,
         temperature=0.7,
@@ -148,12 +148,10 @@ Output format (each item on its own line):
     folder_name = lines[0] if len(lines) > 0 else "images"
     file_name = lines[1] if len(lines) > 1 else "image"
     return folder_name, file_name
-
+"""
 def generate_names_with_textrank(summary):
-    """
     gensim의 keywords 함수를 사용하여 summary에서 키워드를 추출한 후,
     상위 2개 키워드를 폴더명, 상위 3개 키워드를 파일명으로 사용합니다.
-    """
     key_str = keywords(summary, words=5, lemmatize=True)
     key_list = [word for word in key_str.split('\n') if word.strip()]
     print("key_list: ", key_list)
@@ -166,7 +164,8 @@ def generate_names_with_textrank(summary):
     folder_name = "_".join(word.lower() for word in folder_words)
     file_name = "_".join(word.lower() for word in file_words)
     return folder_name, file_name
-
+"""
+# 관용사 및
 def generate_names_with_extended_rules(summary):
     """
     summary에서 알파벳 단어를 추출한 후, 기본 불용어에 추가적으로

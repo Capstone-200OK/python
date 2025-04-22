@@ -2,6 +2,7 @@ import os
 import re
 import datetime  # Import datetime for date operations
 from rich.progress import Progress, TextColumn, BarColumn, TimeElapsedColumn
+from dateutil import parser
 
 def sanitize_filename(name, max_length=50, max_words=5):
     """Sanitize the filename by removing unwanted words and characters."""
@@ -38,9 +39,9 @@ def process_files_by_date(file_infos, output_path, dry_run=False, silent=False, 
     for file_info in file_infos:
         file_path = file_info.get('file_path')
         # Get the modification time
-        mod_time = os.path.getmtime(file_path)
+        mod_time = file_info.get('createdAt')
         # Convert to datetime
-        mod_datetime = datetime.datetime.fromtimestamp(mod_time)
+        mod_datetime = parser.parse(mod_time)
         year = mod_datetime.strftime('%Y') # e.g. ,'2025'
         month = mod_datetime.strftime('%m')  # e.g., %B -> 'January','%m' -> 01
         # Create directory path
@@ -58,7 +59,8 @@ def process_files_by_date(file_infos, output_path, dry_run=False, silent=False, 
             'fileId': file_info.get("fileId"),
             'name': file_info.get("name"),
             'fileType': file_info.get("fileType"),
-            'size': file_info.get("size")
+            'size': file_info.get("size"),
+            "createdAt": mod_time,
         }
         operations.append(operation)
     return operations
