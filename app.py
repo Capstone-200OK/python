@@ -20,14 +20,24 @@ def organize_folder():
     4) 결과 OrganizeResultDTO를 Spring의 /organize/result로 전송
     """
     data = request.json
-    folder_id = data['folderId']
+    folder_ids = data['folderIds']
     mode = data['mode']  # mode 기본값은 "content"
     output_path = data['output_path']
+    destination_folder_id = data['destinationFolderId']
     # A) 폴더 트리 조회 (Spring API 호출)
-    folder_tree = get_folder_data(folder_id)
-
+    if len(folder_ids) == 1:
+        folder_tree = get_folder_data(folder_ids[0])
+    else :
+        folder_tree = {
+            "id": None,
+            "name": None,
+            "files": [],
+            "subFolders": [get_folder_data(fid) for fid in folder_ids],
+            "isDeleted": False
+        }
     # B) 자동 분류 실행 (mode에 따라)
-    result_dict = do_auto_classification(folder_tree, mode=mode, output_path=output_path)
+    result_dict = do_auto_classification(folder_tree,destination_folder_id,mode=mode, output_path=output_path)
+    result_dict["sourceFolderIds"] = folder_ids
     print("Auto-classification result:")
     print(result_dict)
 

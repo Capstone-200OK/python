@@ -83,7 +83,7 @@ def measure_token_length(text, model_name="gpt-4o"):
     tokens = enc.encode(text)
     return len(tokens)
 
-def split_text_into_chunks(text, model_name="gpt-4o", chunk_token_limit=3000):
+def split_text_into_chunks(text, model_name="gpt-4.1", chunk_token_limit=3000):
     """
     text를 chunk_token_limit 이하가 되도록 분할.
     30,000이 아니라, 안전하게 여유분 감안해서 (예: 3천 ~ 5천 단위) 나눌 수 있음.
