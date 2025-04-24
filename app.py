@@ -123,6 +123,8 @@ def generate_thumbnail():
 
 
     img.thumbnail((240, 240))
+    if img.mode == "RGBA":
+        img = img.convert("RGB")
     buf = BytesIO()
     img.save(buf, format='JPEG')
     buf.seek(0)
