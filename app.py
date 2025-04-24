@@ -189,4 +189,4 @@ def classify_file():
 
 if __name__ == '__main__':
     # 실제 운영 시 gunicorn 등으로 배포
-    app.run(host='0.0.0.0', port=5000, debug=True)
+    app.run(host='0.0.0.0', port=5050, debug=True)
