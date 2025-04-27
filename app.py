@@ -15,6 +15,7 @@ from pdf2image import convert_from_bytes
 from pdf2image import convert_from_path
 import tempfile
 import subprocess
+import hashlib
 
 app = Flask(__name__)
 
@@ -79,8 +80,12 @@ def generate_thumbnail():
     file_url = data['fileUrl']
     file_name = secure_filename(data['fileName'])
 
+    # 고유성을 보장하기 위해 해시를 추가
+    base_name = file_name.rsplit('.', 1)[0]
     ext = file_name.split('.')[-1].lower()
-    thumb_name = f"thumb_{file_name.rsplit('.', 1)[0]}.jpg"
+
+    hash_part = hashlib.md5(file_name.encode()).hexdigest()[:8]
+    thumb_name = f"thumb_{base_name}_{hash_part}.jpg"
 
     # 이미지 썸네일 처리 (doc/pdf 처리도 가능)
     response = requests.get(file_url)

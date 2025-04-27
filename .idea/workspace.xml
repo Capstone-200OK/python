@@ -4,7 +4,7 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="35c0ef9d-1514-4f42-a209-0fc7428d67cd" name="변경" comment="&lt;fix&gt; (juho) RGBA -&gt; RGB">
+    <list default="true" id="35c0ef9d-1514-4f42-a209-0fc7428d67cd" name="변경" comment="&lt;build&gt; (juho) port Num change 5050">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
     </list>
@@ -125,7 +125,9 @@
       <workItem from="1745293846987" duration="671000" />
       <workItem from="1745333289712" duration="10167000" />
       <workItem from="1745476037157" duration="5660000" />
-      <workItem from="1745508704873" duration="7913000" />
+      <workItem from="1745508704873" duration="9376000" />
+      <workItem from="1745571740723" duration="1300000" />
+      <workItem from="1745744364071" duration="2923000" />
     </task>
     <task id="LOCAL-00001" summary="commit">
       <option name="closed" value="true" />
@@ -207,7 +209,15 @@
       <option name="project" value="LOCAL" />
       <updated>1745512540785</updated>
     </task>
-    <option name="localTasksCounter" value="11" />
+    <task id="LOCAL-00011" summary="&lt;build&gt; (juho) port Num change 5050">
+      <option name="closed" value="true" />
+      <created>1745519272553</created>
+      <option name="number" value="00011" />
+      <option name="presentableId" value="LOCAL-00011" />
+      <option name="project" value="LOCAL" />
+      <updated>1745519272553</updated>
+    </task>
+    <option name="localTasksCounter" value="12" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -277,11 +287,12 @@
     <MESSAGE value="&lt;perf&gt; (juho) folder serperate" />
     <MESSAGE value="&lt;feat&gt; (juho) add thumbnail" />
     <MESSAGE value="&lt;fix&gt; (juho) RGBA -&gt; RGB" />
-    <option name="LAST_COMMIT_MESSAGE" value="&lt;fix&gt; (juho) RGBA -&gt; RGB" />
+    <MESSAGE value="&lt;build&gt; (juho) port Num change 5050" />
+    <option name="LAST_COMMIT_MESSAGE" value="&lt;build&gt; (juho) port Num change 5050" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/PythonProject$image_data_processing.coverage" NAME="image_data_processing 커버리지 결과" MODIFIED="1743046322581" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/PythonProject$main.coverage" NAME="main 커버리지 결과" MODIFIED="1745515617661" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/PythonProject$main.coverage" NAME="main 커버리지 결과" MODIFIED="1745746767319" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/PythonProject$gpt_utils.coverage" NAME="gpt_utils 커버리지 결과" MODIFIED="1742399202702" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/PythonProject$app.coverage" NAME="app 커버리지 결과" MODIFIED="1744831472560" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
