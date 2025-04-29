@@ -94,7 +94,7 @@ def generate_thumbnail():
         img = Image.open(BytesIO(response.content))
     elif ext == 'pdf':
         img = convert_from_bytes(response.content)[0]
-    elif ext in ['docx', 'xlsx', 'pptx']:
+    elif ext in ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']:
         with tempfile.TemporaryDirectory() as tmpdir:
             input_path = os.path.join(tmpdir, file_name)
             pdf_path = os.path.join(tmpdir, file_name.rsplit('.', 1)[0] + ".pdf")
