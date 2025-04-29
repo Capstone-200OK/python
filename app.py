@@ -45,20 +45,25 @@ def organize_folder():
     mode = data['mode']  # mode 기본값은 "content"
     output_path = data['output_path']
     destination_folder_id = data['destinationFolderId']
+    user_id = data['userId']
     # A) 폴더 트리 조회 (Spring API 호출)
+    print("folder_ids: ", folder_ids)
     if len(folder_ids) == 1:
-        folder_tree = get_folder_data(folder_ids[0])
+        print("folderLen: ", format(len(folder_ids)))
+        folder_tree = get_folder_data(folder_ids[0], user_id)
     else :
+        print("folderLen: ", format(len(folder_ids)))
         folder_tree = {
             "id": None,
             "name": None,
             "files": [],
-            "subFolders": [get_folder_data(fid) for fid in folder_ids],
+            "subFolders": [get_folder_data(fid, user_id) for fid in folder_ids],
             "isDeleted": False
         }
     # B) 자동 분류 실행 (mode에 따라)
     result_dict = do_auto_classification(folder_tree,destination_folder_id,mode=mode, output_path=output_path)
     result_dict["sourceFolderIds"] = folder_ids
+    result_dict["userId"] = user_id
     print("Auto-classification result:")
     print(result_dict)
 
