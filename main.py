@@ -145,8 +145,8 @@ def ensure_folder_hierarchy(user_id, full_path):
 
     return current_parent_id
 
-def get_folder_data(folder_id):
-    url = f"{BASE_URL}/folder/hierarchy/{folder_id}"
+def get_folder_data(folder_id, user_id):
+    url = f"{BASE_URL}/folder/hierarchy/{folder_id}/{user_id}"
     r = requests.get(url)
     r.raise_for_status()
     print("r.json(): ", format(r.json()))
@@ -182,6 +182,7 @@ def extract_files_from_tree(folder_tree):
                 "fileType": f.get("fileType", "").lower(),
                 "name": f.get("name"),
                 "createdAt": f.get("createdAt"),
+                "size": f.get("size")
             })
     if "subFolders" in folder_tree:
         for sub in folder_tree["subFolders"]:
