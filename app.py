@@ -64,6 +64,9 @@ def organize_folder():
     result_dict = do_auto_classification(folder_tree,destination_folder_id,mode=mode, output_path=output_path)
     result_dict["sourceFolderIds"] = folder_ids
     result_dict["userId"] = user_id
+    print("✅ isScheduled 전달됨:", data.get("isScheduled"))
+    result_dict["isScheduled"] = data.get("isScheduled", False)
+    result_dict["originalStartFolderIds"] = folder_ids
     print("Auto-classification result:")
     print(result_dict)
 
