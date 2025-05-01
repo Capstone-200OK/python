@@ -67,6 +67,7 @@ def organize_folder():
     print("✅ isScheduled 전달됨:", data.get("isScheduled"))
     result_dict["isScheduled"] = data.get("isScheduled", False)
     result_dict["originalStartFolderIds"] = folder_ids
+    result_dict["isMaintain"] = data.get("isMaintain", False)
     print("Auto-classification result:")
     print(result_dict)
 
