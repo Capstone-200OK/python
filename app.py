@@ -16,6 +16,7 @@ from pdf2image import convert_from_path
 import tempfile
 import subprocess
 import hashlib
+from PIL import Image, ImageDraw, ImageFont
 
 app = Flask(__name__)
 
@@ -31,7 +32,7 @@ s3 = boto3.client('s3',
                   aws_secret_access_key=aws_secret_access_key,
                   region_name='ap-northeast-2'
 )
-
+font_path = os.path.join("fonts", "NotoSansKR-Regular.ttf")
 @app.route('/organize_folder', methods=['POST'])
 def organize_folder():
     """
@@ -103,6 +104,10 @@ def generate_thumbnail():
         img = Image.open(BytesIO(response.content))
     elif ext == 'pdf':
         img = convert_from_bytes(response.content)[0]
+    elif ext in ['txt', 'md', 'csv']:
+        response.encoding = 'utf-8'  # 인코딩 강제 (필요 시)
+        text = response.text[:1000]  # 너무 길면 잘라냄
+        img = create_text_thumbnail(text)
     elif ext in ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']:
         with tempfile.TemporaryDirectory() as tmpdir:
             input_path = os.path.join(tmpdir, file_name)
@@ -146,6 +151,46 @@ def generate_thumbnail():
     s3.upload_fileobj(buf, S3_BUCKET, f"thumbnails/{thumb_name}", ExtraArgs={'ContentType': 'image/jpeg'})
 
     return jsonify({"thumbnailUrl": f"{S3_BASE_URL}thumbnails/{thumb_name}"})
+
+def create_text_thumbnail(text, width=240, height=240, font_size=14):
+    from PIL import Image, ImageDraw, ImageFont
+
+    img = Image.new('RGB', (width, height), color='white')
+    draw = ImageDraw.Draw(img)
+
+    try:
+        font = ImageFont.truetype(font_path, font_size)
+    except Exception as e:
+        print(f"[WARN] 사용자 폰트 로딩 실패, 기본 폰트 사용: {e}")
+        font = ImageFont.load_default()
+
+    lines = []
+    words = text.split()
+    line = ''
+    for word in words:
+        # line이 비어있을 경우를 고려한 테스트 문자열 생성
+        test_line = (line + ' ' + word).strip() if line else word
+        try:
+            bbox = draw.textbbox((0, 0), test_line, font=font)
+            text_width = bbox[2] - bbox[0]
+        except Exception as e:
+            print(f"[ERROR] 텍스트 bbox 계산 실패: {e}")
+            text_width = width
+
+        if text_width < width - 20:
+            line = test_line
+        else:
+            lines.append(line)
+            line = word
+    if line:
+        lines.append(line)
+
+    y = 10
+    for line in lines[:10]:
+        draw.text((10, y), line, fill='black', font=font)
+        y += font_size + 4
+
+    return img
 
 @app.route('/classify', methods=['POST'])
 def classify_file():
