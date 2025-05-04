@@ -142,7 +142,7 @@ def compute_operations(data_list, new_path, renamed_files, processed_files):
         processed_files.add(file_path)
 
         # 폴더 이름과 새로운 파일 이름 구성
-        folder_name = file_info['foldername']
+        folder_name = file_info['category']
         extension = os.path.splitext(file_info.get("name"))[1]  # 진짜 원래 이름 기준
         base_filename = file_info.get("filename") or os.path.splitext(file_info.get("name"))[0]
         new_file_name = base_filename + extension

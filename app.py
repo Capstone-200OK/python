@@ -90,28 +90,29 @@ def generate_thumbnail():
     file_url = data['fileUrl']
     file_name = secure_filename(data['fileName'])
 
-    # 고유성을 보장하기 위해 해시를 추가
     base_name = file_name.rsplit('.', 1)[0]
     ext = file_name.split('.')[-1].lower()
-
     hash_part = hashlib.md5(file_name.encode()).hexdigest()[:8]
     thumb_name = f"thumb_{base_name}_{hash_part}.jpg"
 
-    # 이미지 썸네일 처리 (doc/pdf 처리도 가능)
     response = requests.get(file_url)
     img = None
+
     if ext in ['png', 'jpg', 'jpeg']:
         img = Image.open(BytesIO(response.content))
+
     elif ext == 'pdf':
         img = convert_from_bytes(response.content)[0]
+
     elif ext in ['txt', 'md', 'csv']:
-        response.encoding = 'utf-8'  # 인코딩 강제 (필요 시)
-        text = response.text[:1000]  # 너무 길면 잘라냄
+        response.encoding = 'utf-8'
+        text = response.text[:1000]
         img = create_text_thumbnail(text)
+
     elif ext in ['doc', 'docx', 'xls', 'xlsx', 'ppt', 'pptx']:
         with tempfile.TemporaryDirectory() as tmpdir:
             input_path = os.path.join(tmpdir, file_name)
-            pdf_path = os.path.join(tmpdir, file_name.rsplit('.', 1)[0] + ".pdf")
+            pdf_path = os.path.join(tmpdir, base_name + ".pdf")
 
             with open(input_path, 'wb') as f:
                 f.write(response.content)
@@ -123,10 +124,9 @@ def generate_thumbnail():
                     "--convert-to", "pdf",
                     "--outdir", tmpdir,
                     input_path
-                ], check=True,stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                ], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
                 print("[LibreOffice stdout]", result.stdout)
                 print("[LibreOffice stderr]", result.stderr)
-                print("[DEBUG] Expecting PDF at:", pdf_path)
             except subprocess.CalledProcessError as e:
                 print("[LibreOffice 오류]", e.stderr)
                 return jsonify({"error": f"LibreOffice 변환 실패: {e.stderr}"}), 500
@@ -135,15 +135,19 @@ def generate_thumbnail():
                 return jsonify({"error": "PDF 생성 실패"}), 500
 
             try:
-                images = convert_from_path(pdf_path, first_page=1, last_page=1, size=(240, 240),poppler_path=poppler_path)
+                images = convert_from_path(pdf_path, first_page=1, last_page=1, size=(240, 240), poppler_path=poppler_path)
                 img = images[0]
             except Exception as e:
                 return jsonify({"error": f"이미지 변환 실패: {str(e)}"}), 500
 
+    if img is None:
+        return jsonify({"error": "지원하지 않는 파일 형식입니다."}), 400
 
+    # 썸네일 크기 적용 및 모드 변환
     img.thumbnail((240, 240))
-    if img.mode == "RGBA":
+    if img.mode not in ("RGB", "L"):
         img = img.convert("RGB")
+
     buf = BytesIO()
     img.save(buf, format='JPEG')
     buf.seek(0)

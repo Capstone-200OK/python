@@ -201,110 +201,233 @@ def generate_image_metadata_single_prompt(image_path, api_key=None):
     # data_url = "https://ifh.cc/g/ntQPT0.jpg"
     data_url = encode_image(image_path)
     # B) OpenAI Client
-    client = OpenAI(api_key=api_key)
-
-    # C) Prompt
-    system_prompt = (
-        "You are an AI assistant with advanced vision capabilities."
-        "Analyze the image based solely on the visible information, and describe the clear elements you observe."
-        "Do not invent details beyond what is clearly visible."
-    )
-
-    user_prompt = f"""
-    Please do the following for the image data below:
-
-    1) Provide a concise description of the main subject and its context (max ~150 characters). 
-        - Describe only the clear elements; if certain details are ambiguous, simply omit them.
-    2) Based on that description, generate a folder name (max 2 words, nouns only).
-    3) Generate a file name (max 3 words, nouns only, connected by underscores).
-
-    Image data (base64):
-    {data_url}
-    
-Output format (each item on its own line):
-[ShortSummary]
-[FolderName]
-[FileName]
-"""
-
-    messages = [
-        {"role": "developer", "content": system_prompt},
-        {"role": "user", "content": user_prompt},
-    ]
-    text = f"""
-Please do the following for this image:
-
-1) A short summary (1~2 sentences). Do not invent details not visible.
-2) One category only from: [animal, nature, food, technology, abstract, architecture, vehicle, document, art, people, symbol, object, landscape, history].
-3) A 2-word folder name: 
-   - First word = chosen category
-   - Second word = a noun describing the main subject
-4) A 3-word file name (all nouns, connected by underscores), representing the essence of the image.
-
-Output (each on its own line):
-[ShortSummary]
-[Category]
-[FolderName]
-[FileName]
-
-Example:
---------------------------------------------------
-A brief description of the image content.
-animal
-animal_whales
-ocean_whale_breach
---------------------------------------------------
-
-Image data:
-{data_url}
-
-"""
-    completion = client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=[
-            {
-                "role": "system",
-                "content": (
-                    "You are an AI assistant with advanced vision capabilities."
-                    "When describing the image, you must also mention a broader or higher-level category that best fits the main subject."
-                    "Choose the category from the following set only: animal, nature, food, technology, abstract, architecture, vehicle, document, art, people, symbol, object, landscape, history."
-                    "Do not invent details beyond what is clearly visible."
-                )
-            },
-            {
-                "role": "user",
-                "content": [
-                    {"type": "text",
-                     "text": "Please describe this image in a short summary. Also provide a broad category. Then create a folder name (2 words) and a file name (3 words) based on that summary."},
-                    {
-                        "type": "image_url",
-                        "image_url": {
-                            "url": f"data:image/jpeg;base64,{data_url}",
-                        },
-                    },
-                ],
-            }
-        ],
-        max_tokens=600,
-        temperature=0.7,
-    )
-
-    # D) 응답 파싱
-    response_text = completion.choices[0].message.content.strip()
-    print(response_text)
-    lines = [line.strip() for line in response_text.split("\n") if line.strip()]
-    print(lines)
-    short_summary = lines[0] if len(lines) > 0 else "No summary"
-    category = lines[1] if len(lines) > 1 else "misc"
-    raw_folder = lines[2] if len(lines) > 2 else "images"
-    raw_file = lines[3] if len(lines) > 3 else "image"
+#     client = OpenAI(api_key=api_key)
+#
+#     # C) Prompt
+#     system_prompt = (
+#         "You are an AI assistant with advanced vision capabilities."
+#         "Analyze the image based solely on the visible information, and describe the clear elements you observe."
+#         "Do not invent details beyond what is clearly visible."
+#     )
+#
+#     user_prompt = f"""
+# Please do the following for this image:
+#
+# 1) A short summary (1~2 sentences). Do not invent details not visible.
+# 2) One category only from: [animal, nature, food, technology, abstract, architecture, vehicle, document, art, people, symbol, object, landscape, history].
+# 3) A 2-word folder name:
+#    - First word = chosen category
+#    - Second word = a noun describing the main subject
+# 4) A 3-word file name (all nouns, connected by underscores), representing the essence of the image.
+#
+# Output (each on its own line):
+# [ShortSummary]
+# [Category]
+# [FolderName]
+# [FileName]
+#
+# Example:
+# --------------------------------------------------
+# A brief description of the image content.
+# animal
+# animal_whales
+# ocean_whale_breach
+# --------------------------------------------------
+#
+# Image data:
+# {data_url}
+#
+# """
+#
+#     messages = [
+#         {"role": "developer", "content": system_prompt},
+#         {"role": "user", "content": user_prompt},
+#     ]
+#     text = f"""
+# Please do the following for this image:
+#
+# 1) A short summary (1~2 sentences). Do not invent details not visible.
+# 2) One category only from: [animal, nature, food, technology, abstract, architecture, vehicle, document, art, people, symbol, object, landscape, history].
+# 3) A 2-word folder name:
+#    - First word = chosen category
+#    - Second word = a noun describing the main subject
+# 4) A 3-word file name (all nouns, connected by underscores), representing the essence of the image.
+#
+# Output (each on its own line):
+# [ShortSummary]
+# [Category]
+# [FolderName]
+# [FileName]
+#
+# Example:
+# --------------------------------------------------
+# A brief description of the image content.
+# animal
+# animal_whales
+# ocean_whale_breach
+# --------------------------------------------------
+#
+# Image data:
+# {data_url}
+#
+# """
+#     completion = client.chat.completions.create(
+#         model="gpt-4.1",
+#         messages=[
+#             {
+#                 "role": "system",
+#                 "content": (
+#                     "You are an AI assistant with advanced vision capabilities."
+#                     "When describing the image, you must also mention a broader or higher-level category that best fits the main subject."
+#                     "Choose the category from the following set only: animal, nature, food, technology, abstract, architecture, vehicle, document, art, people, symbol, object, landscape, history."
+#                     "Do not invent details beyond what is clearly visible."
+#                 )
+#             },
+#             {
+#                 "role": "user",
+#                 "content": [
+#                     {"type": "text",
+#                      "text": "Please describe this image in a short summary. Also provide a broad category. Then create a folder name (2 words) and a file name (3 words) based on that summary."},
+#                     {
+#                         "type": "image_url",
+#                         "image_url": {
+#                             "url": f"data:image/jpeg;base64,{data_url}",
+#                         },
+#                     },
+#                 ],
+#             }
+#         ],
+#         max_tokens=600,
+#         temperature=0.7,
+#     )
+#
+#     # D) 응답 파싱
+#     response_text = completion.choices[0].message.content.strip()
+    # print("response_text {}" .format(response_text))
+    # lines = [line.strip() for line in response_text.split("\n") if line.strip()]
+    # print("lines {}".format(lines))
+    # short_summary = lines[0] if len(lines) > 0 else "No summary"
+    # print("short_summary {}" .format(short_summary))
+    # category = lines[1] if len(lines) > 1 else "misc"
+    # print("category {}" .format(category))
+    # raw_folder = lines[2] if len(lines) > 2 else "images"
+    # print("raw_folder {}" .format(raw_folder))
+    # raw_file = lines[3] if len(lines) > 3 else "image"
+    # print("raw_file {}" .format(raw_file))
+    category = generate_category_with_gpt(data_url, api_key)
+    file_name = generate_filename_with_gpt(data_url, api_key)
+    print("category: ", category)
+    print("file_name: ", file_name)
+    # summary_raw, category_raw, folder_raw, filename_raw = extract_fields(response_text)
     # 1. 기본
     #folder_name, file_name = generate_folder_and_filename_from_summary(response_text)
     # 2. nltk 사용
     #folder_name, file_name = generate_names_with_pos(generate_names_with_extended_rules(response_text))
     #return response_text, folder_name, file_name
-    return short_summary, category, raw_file
+    #return summary_raw, category_raw, folder_raw, filename_raw
+    return category, file_name
+def generate_category_with_gpt(data_url, api_key):
+    client = OpenAI(api_key=api_key)
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are a precise image categorization assistant. "
+                "Return only the category as a single word from this list: "
+                "[animal, nature, food, technology, abstract, architecture, vehicle, document, art, people, symbol, object, landscape, history]."
+                " No explanation. No extra text. Just the category word."
+            )
+        },
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "What is the best category for this image?"},
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{data_url}"}}
+            ]
+        }
+    ]
+    completion = client.chat.completions.create(
+        model="gpt-4.1",
+        messages=messages,
+        max_tokens=300,
+        temperature=0.5,
+    )
+    category = completion.choices[0].message.content.strip().lower()
+    return category
 
+def generate_filename_with_gpt(data_url, api_key):
+    client = OpenAI(api_key=api_key)
+    messages = [
+        {
+            "role": "system",
+            "content": (
+                "You are an AI assistant that creates concise image file names. "
+                "Analyze the image and return only a file name in the form of three nouns, joined by underscores. "
+                "Example: ocean_whale_breach. "
+                "Do not include any explanation, punctuation, or markdown formatting."
+            )
+        },
+        {
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Generate a file name for this image."},
+                {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{data_url}"}}
+            ]
+        }
+    ]
+    completion = client.chat.completions.create(
+        model="gpt-4.1",
+        messages=messages,
+        max_tokens=300,
+        temperature=0.5,
+    )
+    file_name = completion.choices[0].message.content.strip().lower().replace(" ", "_")
+    return file_name
+
+def parse_gpt_response(response_text):
+    print("response_text:\n", response_text)
+
+    # 기본값 설정
+    short_summary = "No summary"
+    category = "Uncategorized"
+    folder_name = "Unknown"
+    file_name = "unnamed"
+
+    # 라인 정리
+    lines = [line.strip() for line in response_text.split('\n') if line.strip()]
+    print("lines:", lines)
+
+    for i, line in enumerate(lines):
+        lower_line = line.lower()
+
+        if 'short summary' in lower_line or 'summary' in lower_line:
+            if i + 1 < len(lines):
+                short_summary = lines[i + 1].strip()
+        elif 'category' in lower_line or 'broad category' in lower_line:
+            if i + 1 < len(lines):
+                category = lines[i + 1].strip()
+        elif 'folder name' in lower_line:
+            if i + 1 < len(lines):
+                folder_name = lines[i + 1].strip()
+        elif 'file name' in lower_line:
+            if i + 1 < len(lines):
+                file_name = lines[i + 1].strip()
+
+    return short_summary, category, folder_name, file_name
+
+def extract_fields(response_text):
+    # 통일된 key 이름으로 정규표현식 찾기
+    summary_match = re.search(r"(?i)(Summary|Short Summary)\s*[:：]?\s*(.+)", response_text)
+    category_match = re.search(r"(?i)(Broad\s+category|Category)\s*[:：]?\s*(.+)", response_text)
+    folder_match = re.search(r"(?i)(Folder\s+name)\s*[:：]?\s*(.+)", response_text)
+    filename_match = re.search(r"(?i)(File\s+name)\s*[:：]?\s*(.+)", response_text)
+
+    summary = summary_match.group(2).strip() if summary_match else "No summary"
+    category = category_match.group(2).strip() if category_match else "misc"
+    folder = folder_match.group(2).strip() if folder_match else category  # fallback
+    filename = filename_match.group(2).strip() if filename_match else "unnamed"
+
+    return summary, category, folder, filename
 ##############################################################################
 # 4) process_single_image: 3줄 출력 로직
 ##############################################################################
@@ -319,13 +442,13 @@ def process_single_image(image_path, api_key=None, silent=False, log_file=None):
         task_id = progress.add_task(f"Processing {os.path.basename(image_path)}", total=1.0)
 
         # GPT로 이미지 요약+폴더+파일명 한 번에 받기 (인메모리 리사이즈)
-        summary_raw, folder_raw, filename_raw = generate_image_metadata_single_prompt(
+        category, filename_raw = generate_image_metadata_single_prompt(
             image_path=image_path,
             api_key=api_key
         )
 
         # 정제
-        sanitized_folder = sanitize_filename(folder_raw, max_words=2)
+        sanitized_folder = sanitize_filename(category, max_words=2)
         sanitized_file = sanitize_filename(filename_raw, max_words=3)
 
         progress.update(task_id, advance=1.0)
@@ -336,8 +459,7 @@ def process_single_image(image_path, api_key=None, silent=False, log_file=None):
     message = (
         f"File: {image_path}\n"
         f"Time taken: {time_taken:.2f} seconds\n"
-        f"Short Summary: {summary_raw}\n"
-        f"Folder name: {folder_raw}\n"
+        f"Folder name: {category}\n"
         f"Generated filename: {sanitized_file}\n"
     )
     if silent:
@@ -349,9 +471,9 @@ def process_single_image(image_path, api_key=None, silent=False, log_file=None):
 
     return {
         "file_path": image_path,
-        "foldername": folder_raw,
+        "foldername": sanitized_folder,
         "filename": sanitized_file,
-        "description": summary_raw
+        "category": category,
     }
 
 
