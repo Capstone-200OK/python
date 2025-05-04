@@ -24,6 +24,7 @@ from text_data_processing import (
 from image_data_processing import (
     process_image_files
 )
+from title_data_processing import process_files_by_title
 
 nltk.download('averaged_perceptron_tagger_eng')
 
@@ -250,7 +251,8 @@ def do_auto_classification(folder_tree, destination_folder_id, mode="type", outp
         # date 모드: 날짜 기준 분류
         #file_paths = [f["file_path"] for f in file_list if f["file_path"]]
         operations = process_files_by_date(file_list, output_path, dry_run=False, silent=True, log_file=None)
-
+    elif mode == "title":
+        operations = process_files_by_title(file_list, output_path)
     elif mode == "type":
         # type 모드: 확장자, 파일 유형 기준 분류
         # file_paths = [f["file_path"] for f in file_list if f["file_path"]]

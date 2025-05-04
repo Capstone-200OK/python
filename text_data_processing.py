@@ -77,18 +77,18 @@ Output format (each item on a new line, in this exact order):
 def measure_token_length(text, model_name="gpt-4o"):
     """
     tiktoken으로 text를 인코딩해 실제 토큰 길이를 반환.
-    gpt-4o 기준 인코딩: tiktoken.encoding_for_model("gpt-4o")
+    gpt-4.1 기준 인코딩: tiktoken.encoding_for_model("gpt-4.1")
     """
-    enc = tiktoken.encoding_for_model(model_name)
+    enc = tiktoken.encoding_for_model("gpt-4o")
     tokens = enc.encode(text)
     return len(tokens)
 
-def split_text_into_chunks(text, model_name="gpt-4.1", chunk_token_limit=3000):
+def split_text_into_chunks(text, model_name="gpt-4o", chunk_token_limit=3000):
     """
     text를 chunk_token_limit 이하가 되도록 분할.
     30,000이 아니라, 안전하게 여유분 감안해서 (예: 3천 ~ 5천 단위) 나눌 수 있음.
     """
-    enc = tiktoken.encoding_for_model(model_name)
+    enc = tiktoken.encoding_for_model("gpt-4o")
     tokens = enc.encode(text)
     print("len(tokens): ", len(tokens))
     chunks = []
@@ -113,7 +113,7 @@ def gpt_summarize_text_chunk(text, system_prompt=None, user_prompt=None, max_tok
 
     import openai
     response = openai.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4.1",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
@@ -124,7 +124,7 @@ def gpt_summarize_text_chunk(text, system_prompt=None, user_prompt=None, max_tok
     summary = response.choices[0].message.content.strip()
     return summary
 
-def map_reduce_summarize(text, model_name="gpt-4o", chunk_token_limit=3000):
+def map_reduce_summarize(text, model_name="gpt-4.1", chunk_token_limit=3000):
     """
     긴 text -> 여러 chunk -> chunk별 요약(sub-summaries) -> 최종 통합 요약
     """
@@ -159,7 +159,7 @@ def map_reduce_category_and_metadata(text):
     - 폴더명, 파일명 생성
     (단일 프롬프트로 4줄 결과 도출)
     """
-    final_summary = map_reduce_summarize(text, model_name="gpt-4o")
+    final_summary = map_reduce_summarize(text, model_name="gpt-4.1")
 
     # 이제 final_summary를 넣어, 기존 single-prompt와 같은 4줄(요약, 카테고리, 폴더, 파일명)을 생성
     system_prompt = (
@@ -178,7 +178,7 @@ Now please produce the following (line by line):
 """
 
     response = openai.chat.completions.create(
-        model="gpt-4o",
+        model="gpt-4.1",
         messages=[
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_prompt}
@@ -220,7 +220,7 @@ def process_single_text_file(args, ext, silent=False, log_file=None):
                 # 짧은 경우 -> 기존 single spreadsheet logic
                 summary, category, folder_name_raw, filename_raw = process_spreadsheet_file(file_path,
                                                                                             columns=[0, 1, 2],
-                                                                                            model="gpt-4o")
+                                                                                            model="gpt-4.1")
             else:
                 # 긴 경우 -> map-reduce spreadsheet
                 result = process_single_spreadsheet_mapreduce(file_path, silent=silent, log_file=log_file)
@@ -291,7 +291,7 @@ def process_single_spreadsheet_mapreduce(file_path, silent=False, log_file=None)
     # (A) Map-Reduce Summarization for spreadsheet
     summary, category, folder_name_raw, file_name_raw = map_reduce_spreadsheet(
         file_path,
-        model_name="gpt-4o",
+        model_name="gpt-4.1",
         columns=[0, 1, 2],
         chunk_size=500
     )
@@ -382,7 +382,7 @@ def process_single_spreadsheet(args, silent=False, log_file=None):
     ) as progress:
         task_id = progress.add_task(f"Processing {os.path.basename(file_path)}", total=1.0)
 
-        summary, category, folder_name_raw, filename_raw = process_spreadsheet_file(file_path, columns=[0, 1, 2], model="gpt-4o")
+        summary, category, folder_name_raw, filename_raw = process_spreadsheet_file(file_path, columns=[0, 1, 2], model="gpt-4.1")
 
         # 단순 예시로 folder/file 이름은 임의로
         # folder_name = "spreadsheet_summary"
@@ -417,7 +417,7 @@ def process_single_spreadsheet(args, silent=False, log_file=None):
         "category": "Spreadsheet"
     }
 
-def map_reduce_spreadsheet(file_path, model_name="gpt-4o", columns=[0,1,2], chunk_size=500):
+def map_reduce_spreadsheet(file_path, model_name="gpt-4.1", columns=[0,1,2], chunk_size=500):
     """
     1) Excel/CSV 로딩
     2) (행 수가 많다면) chunk_size씩 나누어 부분 요약 (Map)
