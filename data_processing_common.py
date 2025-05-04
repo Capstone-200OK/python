@@ -135,43 +135,48 @@ def process_files_by_type(file_infos, output_path, dry_run=False, silent=False, 
 def compute_operations(data_list, new_path, renamed_files, processed_files):
     """Compute the file operations based on generated metadata."""
     operations = []
-    for data in data_list:
-        file_path = data['file_path']
+    for file_info in data_list:
+        file_path = file_info['file_path']
         if file_path in processed_files:
             continue
         processed_files.add(file_path)
 
-        # Prepare folder name and file name
-        folder_name = data['foldername']
-        new_file_name = data['filename'] + os.path.splitext(file_path)[1]
+        # 폴더 이름과 새로운 파일 이름 구성
+        folder_name = file_info['foldername']
+        extension = os.path.splitext(file_info.get("name"))[1]  # 진짜 원래 이름 기준
+        base_filename = file_info.get("filename") or os.path.splitext(file_info.get("name"))[0]
+        new_file_name = base_filename + extension
 
-        # Prepare new file path
+        # 디렉토리 및 새 경로 구성
         dir_path = "/".join([new_path, folder_name])
         new_file_path = "/".join([dir_path, new_file_name])
 
-        # Handle duplicates
+        # 중복 방지
         counter = 1
-        original_new_file_name = new_file_name
         while new_file_path in renamed_files:
-            new_file_name = f"{data['filename']}_{counter}" + os.path.splitext(file_path)[1]
+            new_file_name = f"{base_filename}_{counter}{extension}"
             new_file_path = "/".join([dir_path, new_file_name])
             counter += 1
 
-        # Decide whether to use hardlink or symlink
-        link_type = 'hardlink'  # Assume hardlink for now
-        file_id = data.get("fileId")
-        # Record the operation
+        renamed_files.add(new_file_path)
+
+        # 링크 방식 결정 (필요시 symlink 지원 가능)
+        link_type = 'hardlink'
+
+        # operation에 메타데이터 추가
         operation = {
             'source': file_path,
             'destination': new_file_path,
             'link_type': link_type,
-            'folder_name': folder_name,
-            'new_file_name': new_file_name
+            'fileId': file_info.get("fileId"),
+            'name': new_file_name,
+            'fileType': file_info.get("fileType"),
+            'size': file_info.get("size"),
+            'createdAt': file_info.get("createdAt"),
         }
         operations.append(operation)
-        renamed_files.add(new_file_path)
 
-    return operations  # Return the list of operations for display or further processing
+    return operations
 
 def execute_operations(operations, dry_run=False, silent=False, log_file=None):
     """Execute the file operations."""

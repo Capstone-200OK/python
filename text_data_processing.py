@@ -524,16 +524,22 @@ Output format (4 lines):
     return short_summary, category, folder_name, file_name
 
 
-def process_text_files(text_tuples, silent=False, log_file=None):
+def process_text_files(text_tuples, file_list, silent=False, log_file=None):
     """
     Processes text files sequentially.
     If short enough, single prompt GPT. If too long, map-reduce approach.
     """
-    results = []
-    for args in text_tuples:
-        file_path = args[0]
-        ext = os.path.splitext(file_path)[1].lower()
-        # 일반 텍스트 파일 -> 기존 process_single_text_file 등
-        data = process_single_text_file(args, ext, silent=silent, log_file=log_file)
-        results.append(data)
-    return results
+    data_list = []
+    for file_path, text in text_tuples:
+        original_info = next((f for f in file_list if f['file_path'] == file_path), {})
+        ext = os.path.splitext(file_path)[1]
+        data = process_single_text_file((file_path, text), ext, silent=silent, log_file=log_file)
+        data.update({
+            "fileId": original_info.get("fileId"),
+            "name": original_info.get("name"),
+            "fileType": original_info.get("fileType"),
+            "size": original_info.get("size"),
+            "createdAt": original_info.get("createdAt"),
+        })
+        data_list.append(data)
+    return data_list
