@@ -2,12 +2,13 @@ import os
 import time
 import nltk
 import requests
+import tempfile
 
 from file_utils import (
     display_directory_tree,
     collect_file_paths,
     separate_files_by_type,
-    read_file_data
+    read_file_data, separate_files_by_type_from_metadata
 )
 from data_processing_common import (
     compute_operations,
@@ -176,13 +177,16 @@ def extract_files_from_tree(folder_tree):
     files = []
     if "files" in folder_tree:
         for f in folder_tree["files"]:
+            s3_url = f.get("fileUrl")
+            local_path = download_file_from_url(s3_url) if s3_url else None
             files.append({
                 "fileId": f.get("id"),
-                "file_path": f.get("filePath"),
+                "file_path": local_path,
                 "fileType": f.get("fileType", "").lower(),
                 "name": f.get("name"),
                 "createdAt": f.get("createdAt"),
-                "size": f.get("size")
+                "size": f.get("size"),
+                "fileUrl": s3_url
             })
     if "subFolders" in folder_tree:
         for sub in folder_tree["subFolders"]:
@@ -210,27 +214,38 @@ def do_auto_classification(folder_tree, destination_folder_id, mode="type", outp
     if mode == "content":
         # content 모드: GPT 기반 이미지/텍스트 분리 처리
         file_paths = [f["file_path"] for f in file_list if f["file_path"]]
+        print("file_paths: {}".format(file_paths))
         # 분류: 이미지와 텍스트 파일 분리 (이미 존재하는 separate_files_by_type 사용)
-        image_files, text_files = separate_files_by_type(file_paths)
-
+        image_files, text_files = separate_files_by_type_from_metadata(file_list)
+        print("image_files: {}".format(image_files))
+        print("text_files: {}".format(text_files))
         # 텍스트 파일의 경우 실제 내용 읽기
         text_tuples = []
         for fp in text_files:
             try:
                 with open(fp, "r", encoding="utf-8", errors="ignore") as f:
                     text_content = f.read()
+                    print("success Reading: {}".format(fp))
             except Exception as e:
+                print(f"[ERROR] Failed to read text from {fp}: {e}")
                 text_content = None
             if text_content:
                 text_tuples.append((fp, text_content))
 
-        data_images = process_image_files(image_files, silent=True, log_file=None)
-        data_texts = process_text_files(text_tuples, silent=True, log_file=None)
+        data_images = process_image_files(image_files, file_list=file_list, silent=True, log_file=None)
+        data_texts = process_text_files(text_tuples, file_list=file_list, silent=True, log_file=None)
         all_data = data_images + data_texts
         renamed_files = set()
         processed_files = set()
         operations = compute_operations(all_data, output_path, renamed_files, processed_files)
-
+        for f in file_list:
+            local_path = f.get("file_path")
+            if local_path and os.path.exists(local_path):
+                try:
+                    os.remove(local_path)
+                    print(f"[CLEANUP] Deleted temp file: {local_path}")
+                except Exception as e:
+                    print(f"[ERROR] Failed to delete {local_path}: {e}")
     elif mode == "date":
         # date 모드: 날짜 기준 분류
         #file_paths = [f["file_path"] for f in file_list if f["file_path"]]
@@ -255,6 +270,20 @@ def do_auto_classification(folder_tree, destination_folder_id, mode="type", outp
     print("operation: {} ", format(operations))
     return result_dict
 
+def download_file_from_url(url):
+    """
+    S3 URL로부터 파일을 다운로드하고, 임시 로컬 경로를 반환한다.
+    """
+    response = requests.get(url, stream=True)
+    if response.status_code == 200:
+        temp_file = tempfile.NamedTemporaryFile(delete=False)
+        for chunk in response.iter_content(chunk_size=8192):
+            temp_file.write(chunk)
+        temp_file.close()
+        return temp_file.name
+    else:
+        print(f"[ERROR] Failed to download file: {url}")
+        return None
 
 def send_operations_to_spring(operations, user_id):
     """

@@ -358,14 +358,18 @@ def process_single_image(image_path, api_key=None, silent=False, log_file=None):
 ##############################################################################
 # 5) process_image_files: 여러 이미지 처리
 ##############################################################################
-def process_image_files(image_paths, api_key=None, silent=False, log_file=None):
+def process_image_files(image_paths, file_list, api_key=None, silent=False, log_file=None):
     data_list = []
-    for image_path in image_paths:
-        data = process_single_image(
-            image_path=image_path,
-            api_key=api_key,
-            silent=silent,
-            log_file=log_file
-        )
+    for image in image_paths:
+        # 기존 metadata 참고용
+        original_info = next((f for f in file_list if f['file_path'] == image), {})
+        data = process_single_image(image, api_key=api_key, silent=silent, log_file=log_file)
+        data.update({
+            "fileId": original_info.get("fileId"),
+            "name": original_info.get("name"),
+            "fileType": original_info.get("fileType"),
+            "size": original_info.get("size"),
+            "createdAt": original_info.get("createdAt"),
+        })
         data_list.append(data)
     return data_list

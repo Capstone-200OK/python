@@ -126,4 +126,24 @@ def separate_files_by_type(file_paths):
 
     return image_files, text_files  # Return only two values
 
+def separate_files_by_type_from_metadata(file_list):
+    """file_list 내 fileType 필드를 기준으로 이미지/텍스트 파일 분리"""
+    image_types = {'png', 'jpg', 'jpeg', 'gif', 'bmp', 'tiff'}
+    text_types = {'txt', 'md', 'pdf', 'docx', 'doc', 'xls', 'xlsx', 'csv', 'ppt', 'pptx'}
+
+    image_files = []
+    text_files = []
+
+    for f in file_list:
+        file_type = f.get("fileType", "").lower()
+        file_path = f.get("file_path")
+        if not file_path:
+            continue  # temp file 생성 실패한 경우 무시
+
+        if file_type in image_types:
+            image_files.append(file_path)
+        elif file_type in text_types:
+            text_files.append(file_path)
+
+    return image_files, text_files
 # TODO:ebook: '.mobi', '.azw', '.azw3', '.epub',

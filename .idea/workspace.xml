@@ -4,10 +4,13 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="35c0ef9d-1514-4f42-a209-0fc7428d67cd" name="변경" comment="&lt;perf&gt; (juho) file thumbnail type upgrade">
+    <list default="true" id="35c0ef9d-1514-4f42-a209-0fc7428d67cd" name="변경" comment="&lt;feat&gt; (juho) add textFile thumbnail">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
-      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/data_processing_common.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_processing_common.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/file_utils.py" beforeDir="false" afterPath="$PROJECT_DIR$/file_utils.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/image_data_processing.py" beforeDir="false" afterPath="$PROJECT_DIR$/image_data_processing.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/text_data_processing.py" beforeDir="false" afterPath="$PROJECT_DIR$/text_data_processing.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -19,6 +22,17 @@
       <list>
         <option value="Python Script" />
       </list>
+    </option>
+  </component>
+  <component name="FlaskConsoleOptions" custom-start-script="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass">
+    <envs>
+      <env key="FLASK_APP" value="app" />
+    </envs>
+    <option name="myCustomStartScript" value="import sys; print('Python %s on %s' % (sys.version, sys.platform)); sys.path.extend([WORKING_DIR_AND_PYTHON_PATHS])&#10;from flask.cli import ScriptInfo, NoAppException&#10;for module in [&quot;main.py&quot;, &quot;wsgi.py&quot;, &quot;app.py&quot;]:&#10;    try: locals().update(ScriptInfo(app_import_path=module, create_app=None).load_app().make_shell_context()); print(&quot;\nFlask App: %s&quot; % app.import_name); break&#10;    except NoAppException: pass" />
+    <option name="myEnvs">
+      <map>
+        <entry key="FLASK_APP" value="app" />
+      </map>
     </option>
   </component>
   <component name="Git.Settings">
@@ -58,6 +72,7 @@
 }</component>
   <component name="RecentsManager">
     <key name="MoveFile.RECENT_KEYS">
+      <recent name="C:\Users\jhkim\PycharmProjects\PythonProject\fonts" />
       <recent name="C:\Users\jhkim\PycharmProjects\PythonProject" />
     </key>
   </component>
@@ -129,7 +144,11 @@
       <workItem from="1745508704873" duration="9376000" />
       <workItem from="1745571740723" duration="1300000" />
       <workItem from="1745744364071" duration="3683000" />
-      <workItem from="1745894805303" duration="10350000" />
+      <workItem from="1745894805303" duration="20963000" />
+      <workItem from="1746023690125" duration="2630000" />
+      <workItem from="1746166265925" duration="14685000" />
+      <workItem from="1746342736007" duration="2019000" />
+      <workItem from="1746345342039" duration="3840000" />
     </task>
     <task id="LOCAL-00001" summary="commit">
       <option name="closed" value="true" />
@@ -235,7 +254,31 @@
       <option name="project" value="LOCAL" />
       <updated>1745917891108</updated>
     </task>
-    <option name="localTasksCounter" value="14" />
+    <task id="LOCAL-00014" summary="&lt;fix&gt; (juho) personal cloud seperated">
+      <option name="closed" value="true" />
+      <created>1745925318263</created>
+      <option name="number" value="00014" />
+      <option name="presentableId" value="LOCAL-00014" />
+      <option name="project" value="LOCAL" />
+      <updated>1745925318263</updated>
+    </task>
+    <task id="LOCAL-00015" summary="&lt;feat&gt; (juho) add textFile thumbnail">
+      <option name="closed" value="true" />
+      <created>1746353946286</created>
+      <option name="number" value="00015" />
+      <option name="presentableId" value="LOCAL-00015" />
+      <option name="project" value="LOCAL" />
+      <updated>1746353946286</updated>
+    </task>
+    <task id="LOCAL-00016" summary="&lt;feat&gt; (juho) add textFile thumbnail">
+      <option name="closed" value="true" />
+      <created>1746353954673</created>
+      <option name="number" value="00016" />
+      <option name="presentableId" value="LOCAL-00016" />
+      <option name="project" value="LOCAL" />
+      <updated>1746353954673</updated>
+    </task>
+    <option name="localTasksCounter" value="17" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -308,11 +351,13 @@
     <MESSAGE value="&lt;build&gt; (juho) port Num change 5050" />
     <MESSAGE value="&lt;perf&gt; (juho) S3 thumbnail name duplicate" />
     <MESSAGE value="&lt;perf&gt; (juho) file thumbnail type upgrade" />
-    <option name="LAST_COMMIT_MESSAGE" value="&lt;perf&gt; (juho) file thumbnail type upgrade" />
+    <MESSAGE value="&lt;fix&gt; (juho) personal cloud seperated" />
+    <MESSAGE value="&lt;feat&gt; (juho) add textFile thumbnail" />
+    <option name="LAST_COMMIT_MESSAGE" value="&lt;feat&gt; (juho) add textFile thumbnail" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/PythonProject$image_data_processing.coverage" NAME="image_data_processing 커버리지 결과" MODIFIED="1743046322581" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/PythonProject$main.coverage" NAME="main 커버리지 결과" MODIFIED="1745921369220" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/PythonProject$main.coverage" NAME="main 커버리지 결과" MODIFIED="1746348714486" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/PythonProject$gpt_utils.coverage" NAME="gpt_utils 커버리지 결과" MODIFIED="1742399202702" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/PythonProject$app.coverage" NAME="app 커버리지 결과" MODIFIED="1744831472560" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
