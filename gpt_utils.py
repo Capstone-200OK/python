@@ -6,7 +6,7 @@ from dotenv import load_dotenv
 load_dotenv()
 api_key = os.getenv("OPENAI_API_KEY")
 
-def gpt_generate_text_single_prompt(system_prompt, user_prompt, model="gpt-4.1", max_tokens=300):
+def gpt_generate_text_single_prompt(system_prompt, user_prompt, model="gpt-4.1-2025-04-14", max_tokens=300):
     """
     Calls GPT using the new 'client.chat.completions.create' style.
     """

@@ -128,8 +128,10 @@ def map_reduce_summarize(text, model_name="gpt-4.1", chunk_token_limit=3000):
     """
     긴 text -> 여러 chunk -> chunk별 요약(sub-summaries) -> 최종 통합 요약
     """
+    MAX_CHUNKS = 7  # 최대 10개 chunk만 요약
     # 1) chunk 분할
     chunks = split_text_into_chunks(text, model_name=model_name, chunk_token_limit=chunk_token_limit)
+    chunks = chunks[:MAX_CHUNKS]
     sub_summaries = []
 
     # 2) 각 chunk 요약 (Map)
@@ -195,6 +197,73 @@ Now please produce the following (line by line):
 
     return short_summary, category, folder_name, file_name
 
+def generate_category_and_filename_single_prompt(text):
+    """
+    GPT를 이용해 category와 filename만 생성 (단일 프롬프트 방식)
+    """
+    system_prompt = (
+        "You are an AI assistant that analyzes a given text and returns only:\n"
+        "1) A single category from the list\n"
+        "2) A descriptive file name (3 to 6 words, may include key nouns and adjectives, connected by underscores, clearly reflecting the document`s content:\n"
+    )
+
+    user_prompt = f"""
+Given the following text:
+\"\"\"{text}\"\"\"
+
+Output the result in this format (each on a new line):
+[Category: one of Technical, Academic, Business, Legal, News/Article, Creative, Personal, Instruction/Guide, Code/Programming, General Document]
+[FileName: Generate a descriptive file name (3~6 words, nouns and adjectives allowed, underscore-separated, clearly reflects the document content)]
+"""
+
+    response = gpt_generate_text_single_prompt(
+        system_prompt=system_prompt,
+        user_prompt=user_prompt,
+        max_tokens=200
+    )
+
+    lines = [line.strip() for line in response.split('\n') if line.strip()]
+    category = lines[0] if len(lines) > 0 else "General Document"
+    filename = lines[1] if len(lines) > 1 else "default_filename"
+
+    return category, filename
+
+def map_reduce_category_and_filename(text):
+    """
+    긴 텍스트에 대해: map-reduce 요약 후 → category와 filename 생성
+    """
+    final_summary = map_reduce_summarize(text, model_name="gpt-4.1")
+
+    system_prompt = (
+        "You are an AI assistant that receives a summary and returns only:\n"
+        "1) A single category from the list\n"
+        "2) A file name (3 nouns with underscores)"
+    )
+
+    user_prompt = f"""
+Given the summary:
+\"\"\"{final_summary}\"\"\"
+
+Output the following (each on a new line):
+[Category: one of Technical, Academic, Business, Legal, News/Article, Creative, Personal, Instruction/Guide, Code/Programming, General Document]
+[FileName: 3 words, nouns only, connected by underscores]
+"""
+
+    response = openai.chat.completions.create(
+        model="gpt-4.1",
+        messages=[
+            {"role": "system", "content": system_prompt},
+            {"role": "user", "content": user_prompt}
+        ],
+        max_tokens=200,
+        temperature=0.5
+    )
+
+    lines = [line.strip() for line in response.choices[0].message.content.strip().split("\n") if line.strip()]
+    category = lines[0] if len(lines) > 0 else "General Document"
+    filename = lines[1] if len(lines) > 1 else "default_filename"
+
+    return category, filename
 
 ##############################################################################
 # 3. process_single_text_file: 길이 체크 후, 짧으면 single-prompt, 길면 map-reduce
@@ -204,11 +273,11 @@ def process_single_text_file(args, ext, silent=False, log_file=None):
     file_path, text = args
     start_time = time.time()
 
-    with Progress(
+    with (Progress(
             TextColumn("[progress.description]{task.description}"),
             BarColumn(),
             TimeElapsedColumn()
-    ) as progress:
+    ) as progress):
         task_id = progress.add_task(f"Processing {os.path.basename(file_path)}", total=1.0)
 
         token_count = measure_token_length(text, model_name="gpt-4o")
@@ -218,9 +287,7 @@ def process_single_text_file(args, ext, silent=False, log_file=None):
             # 1) 토큰 검사. 30k 이하인지 여부
             if token_count <= 30000:
                 # 짧은 경우 -> 기존 single spreadsheet logic
-                summary, category, folder_name_raw, filename_raw = process_spreadsheet_file(file_path,
-                                                                                            columns=[0, 1, 2],
-                                                                                            model="gpt-4.1")
+                category, filename = process_spreadsheet_file(file_path,columns=[0, 1, 2],model="gpt-4.1")
             else:
                 # 긴 경우 -> map-reduce spreadsheet
                 result = process_single_spreadsheet_mapreduce(file_path, silent=silent, log_file=log_file)
@@ -245,13 +312,13 @@ def process_single_text_file(args, ext, silent=False, log_file=None):
         else:
             # (B) 일반 텍스트
             if token_count <= 30000:
-                summary, category, folder_name_raw, filename_raw = generate_text_metadata_single_prompt_gpt(text)
+                category, filename = generate_category_and_filename_single_prompt(text)
             else:
-                summary, category, folder_name_raw, filename_raw = map_reduce_category_and_metadata(text)
+                category, filename = map_reduce_category_and_filename(text)
 
         # 폴더명, 파일명 정제
-        sanitized_foldername = sanitize_filename(folder_name_raw, max_words=2)
-        sanitized_filename = sanitize_filename(filename_raw, max_words=3)
+        sanitized_foldername = sanitize_filename(category, max_words=2)
+        sanitized_filename = sanitize_filename(filename, max_words=3)
         progress.update(task_id, advance=1.0)
 
     end_time = time.time()
@@ -261,11 +328,11 @@ def process_single_text_file(args, ext, silent=False, log_file=None):
         f"File: {file_path}\n"
         f"Token Count: {token_count}\n"
         f"Time taken: {time_taken:.2f} seconds\n"
-        f"Summary: {summary}\n"
         f"Category: {category}\n"
         f"Folder name: {sanitized_foldername}\n"
         f"Generated filename: {sanitized_filename}\n"
     )
+    print(message)
     if not silent:
         print(message)
 
@@ -274,30 +341,73 @@ def process_single_text_file(args, ext, silent=False, log_file=None):
         'token_count': token_count,
         'foldername': sanitized_foldername,
         'filename': sanitized_filename,
-        'description': summary,
         'category': category
     }
 
+def map_reduce_summarize_spreadsheet_only(file_path, model_name="gpt-4.1", columns=[0, 1, 2], chunk_size=500):
+    """
+    큰 spreadsheet 파일에서 요약만 추출하는 함수 (카테고리, 파일명 생성은 별도로 진행).
+    """
+    import pandas as pd
+    import math
+
+    ext = os.path.splitext(file_path)[1].lower()
+    if ext in [".xls", ".xlsx"]:
+        df = pd.read_excel(file_path, usecols=columns)
+    elif ext == ".csv":
+        df = pd.read_csv(file_path, usecols=columns)
+    else:
+        raise ValueError(f"Unsupported spreadsheet extension: {ext}")
+
+    total_rows = len(df)
+    num_chunks = math.ceil(total_rows / chunk_size)
+
+    sub_summaries = []
+
+    for i in range(num_chunks):
+        chunk_df = df[i*chunk_size:(i+1)*chunk_size]
+        chunk_str = chunk_df.to_string(index=False)
+
+        summary = gpt_summarize_text_chunk(
+            text=chunk_str,
+            user_prompt=f"Below is spreadsheet chunk #{i+1}:\n{chunk_str}\nSummarize it concisely.",
+            model=model_name,
+            max_tokens=500
+        )
+        sub_summaries.append(summary)
+        time.sleep(0.3)  # Rate limit 보호용
+
+    combined = "\n\n".join(sub_summaries)
+
+    final_summary = gpt_summarize_text_chunk(
+        text=combined,
+        system_prompt="You are an AI assistant that merges spreadsheet summaries into a final summary.",
+        user_prompt=f"Combine these partial spreadsheet summaries into a cohesive final summary:\n{combined}",
+        model=model_name,
+        max_tokens=800
+    )
+
+    return final_summary
 
 def process_single_spreadsheet_mapreduce(file_path, silent=False, log_file=None):
     """
     Performs map-reduce summarization for a large spreadsheet,
-    but replaces the Rich Progress bar with a simple print output.
+    then generates category and filename based on that.
     """
     start_time = time.time()
 
     print(f"[MapReduce] Processing {os.path.basename(file_path)} ...")
 
-    # (A) Map-Reduce Summarization for spreadsheet
-    summary, category, folder_name_raw, file_name_raw = map_reduce_spreadsheet(
+    # (A) 요약만 먼저
+    summary = map_reduce_summarize_spreadsheet_only(
         file_path,
         model_name="gpt-4.1",
         columns=[0, 1, 2],
         chunk_size=500
     )
 
-    # (B) 정제
-    sanitized_foldername = sanitize_filename(folder_name_raw, max_words=2)
+    # (B) 요약 → 카테고리 및 파일명 생성
+    category, file_name_raw = generate_category_and_filename_single_prompt(summary)
     sanitized_filename = sanitize_filename(file_name_raw, max_words=3)
 
     end_time = time.time()
@@ -306,9 +416,7 @@ def process_single_spreadsheet_mapreduce(file_path, silent=False, log_file=None)
     message = (
         f"File: {file_path}\n"
         f"Time taken: {time_taken:.2f} seconds\n"
-        f"Summary:\n{summary}\n"
         f"Category: {category}\n"
-        f"Folder name: {sanitized_foldername}\n"
         f"Generated filename: {sanitized_filename}\n"
     )
 
@@ -321,9 +429,7 @@ def process_single_spreadsheet_mapreduce(file_path, silent=False, log_file=None)
 
     return {
         "file_path": file_path,
-        "foldername": sanitized_foldername,
         "filename": sanitized_filename,
-        "description": summary,
         "category": category
     }
 
@@ -342,28 +448,10 @@ def process_spreadsheet_file(file_path, columns=[0, 1, 2], model="gpt-3.5-turbo"
 
     # 데이터프레임 → 문자열
     df_str = df.to_string(index=False)
-    return generate_text_metadata_single_prompt_gpt(df_str)
-    """
-    system_prompt = "You are a data analyst summarizing spreadsheet contents."
-    user_prompt = f
-Below is a partial view of the spreadsheet's columns 1~3. Summarize the key information in plain text.
+    category, filename_raw = generate_category_and_filename_single_prompt(df_str)
+    sanitized_filename = sanitize_filename(filename_raw, max_words=3)
 
-Data:
-{df_str}
-
-
-    response = openai.ChatCompletion.create(
-        model=model,
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_prompt}
-        ],
-        max_tokens=300,
-        temperature=0.5
-    )
-    summary = response.choices[0].message.content.strip()
-    return summary
-"""
+    return category, sanitized_filename
 
 def process_single_spreadsheet(args, silent=False, log_file=None):
     """

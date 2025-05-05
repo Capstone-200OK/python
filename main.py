@@ -18,7 +18,7 @@ from data_processing_common import (
 )
 # GPT-based text processing (unchanged)
 from text_data_processing import (
-    process_text_files
+    process_text_files, measure_token_length
 )
 # Image processing that requires image_url_map
 from image_data_processing import (
@@ -222,16 +222,19 @@ def do_auto_classification(folder_tree, destination_folder_id, mode="type", outp
         print("text_files: {}".format(text_files))
         # 텍스트 파일의 경우 실제 내용 읽기
         text_tuples = []
-        for fp in text_files:
-            try:
-                with open(fp, "r", encoding="utf-8", errors="ignore") as f:
-                    text_content = f.read()
-                    print("success Reading: {}".format(fp))
-            except Exception as e:
-                print(f"[ERROR] Failed to read text from {fp}: {e}")
+        for f in file_list:
+            fp = f.get("file_path")
+            if fp and os.path.exists(fp):
                 text_content = None
-            if text_content:
-                text_tuples.append((fp, text_content))
+                try:
+                    with open(fp, "r", encoding="utf-8", errors="ignore") as file:
+                        text_content = file.read()
+                        print(f"[READ SUCCESS] {fp} ({measure_token_length(text_content)} tokens)")
+                except Exception as e:
+                    print(f"[ERROR] Failed to read {fp}: {e}")
+
+                if text_content:
+                    text_tuples.append((fp, text_content))
 
         data_images = process_image_files(image_files, file_list=file_list, silent=True, log_file=None)
         data_texts = process_text_files(text_tuples, file_list=file_list, silent=True, log_file=None)
