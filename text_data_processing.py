@@ -37,7 +37,7 @@ Please do the following for the given text:
 
 1) A concise summary (up to 150 characters).
 2) A single classification chosen ONLY from these categories:
-   [Technical, Academic, Business, Legal, News/Article, Creative, Personal, Instruction/Guide, Code/Programming, General Document]
+   [Technical, Academic, Business, Legal, News, Creative, Personal, Instruction, Code, General Document]
 3) A folder name (max 2 words, nouns only).
 4) A file name (max 3 words, nouns only, connected by underscores).
 
@@ -128,7 +128,7 @@ def map_reduce_summarize(text, model_name="gpt-4.1", chunk_token_limit=3000):
     """
     긴 text -> 여러 chunk -> chunk별 요약(sub-summaries) -> 최종 통합 요약
     """
-    MAX_CHUNKS = 7  # 최대 10개 chunk만 요약
+    MAX_CHUNKS = 8  # 최대 10개 chunk만 요약
     # 1) chunk 분할
     chunks = split_text_into_chunks(text, model_name=model_name, chunk_token_limit=chunk_token_limit)
     chunks = chunks[:MAX_CHUNKS]
@@ -151,9 +151,9 @@ def map_reduce_summarize(text, model_name="gpt-4.1", chunk_token_limit=3000):
         user_prompt=f"Combine these partial summaries into a cohesive overall summary:\n{combined}",
         max_tokens=800
     )
-
+    print("final_summary {}".format(final_summary))
     return final_summary
-
+# 미사용
 def map_reduce_category_and_metadata(text):
     """
     최종 요약 얻은 뒤,
@@ -174,7 +174,7 @@ We have an overall summary:
 
 Now please produce the following (line by line):
 [ShortSummary <= 150 chars]
-[Category: one from [Technical, Academic, Business, Legal, News/Article, Creative, Personal, Instruction/Guide, Code/Programming, General Document]]
+[Category: one from [Technical, Academic, Business, Legal, News, Creative, Personal, Instruction, Code, General Document]]
 [FolderName: 2 words, nouns]
 [FileName: 3 words, nouns with underscores]
 """
@@ -203,18 +203,21 @@ def generate_category_and_filename_single_prompt(text):
     """
     system_prompt = (
         "You are an AI assistant that analyzes a given text and returns only:\n"
-        "1) A single category from the list\n"
-        "2) A descriptive file name (3 to 6 words, may include key nouns and adjectives, connected by underscores, clearly reflecting the document`s content:\n"
+        "1) A single category chosen exactly from the list below\n"
+        "2) A descriptive file name (3 to 6 words, nouns/adjectives only, underscore_separated, and clearly reflecting the text content)\n\n"
+        "Return the result in exactly two lines with this strict format:\n"
+        "Category: <one of Technical, Academic, Business, Legal, News, Creative, Personal, Instruction, Code, General Document>\n"
+        "FileName: <3~6 words, underscore-separated>"
     )
 
     user_prompt = f"""
-Given the following text:
-\"\"\"{text}\"\"\"
+    Analyze the following text:
+    \"\"\"{text}\"\"\"
 
-Output the result in this format (each on a new line):
-[Category: one of Technical, Academic, Business, Legal, News/Article, Creative, Personal, Instruction/Guide, Code/Programming, General Document]
-[FileName: Generate a descriptive file name (3~6 words, nouns and adjectives allowed, underscore-separated, clearly reflects the document content)]
-"""
+    Output format (strictly two lines):
+    Category: <one from allowed categories>
+    FileName: <descriptive, underscore_separated, 3~6 words, reflecting document content>
+    """
 
     response = gpt_generate_text_single_prompt(
         system_prompt=system_prompt,
@@ -225,9 +228,10 @@ Output the result in this format (each on a new line):
     lines = [line.strip() for line in response.split('\n') if line.strip()]
     category = lines[0] if len(lines) > 0 else "General Document"
     filename = lines[1] if len(lines) > 1 else "default_filename"
-
+    print("category" , category)
+    print("filename" , filename)
     return category, filename
-
+# 사용
 def map_reduce_category_and_filename(text):
     """
     긴 텍스트에 대해: map-reduce 요약 후 → category와 filename 생성
@@ -237,17 +241,20 @@ def map_reduce_category_and_filename(text):
     system_prompt = (
         "You are an AI assistant that receives a summary and returns only:\n"
         "1) A single category from the list\n"
-        "2) A file name (3 nouns with underscores)"
+        "2) A file name (3 to 6 words, nouns/adjectives only, underscore-separated, clearly reflecting the document content)\n\n"
+        "Return exactly two lines:\n"
+        "Category: <chosen category>\n"
+        "FileName: <descriptive filename>"
     )
 
     user_prompt = f"""
-Given the summary:
-\"\"\"{final_summary}\"\"\"
+    Given the summary:
+    \"\"\"{final_summary}\"\"\"
 
-Output the following (each on a new line):
-[Category: one of Technical, Academic, Business, Legal, News/Article, Creative, Personal, Instruction/Guide, Code/Programming, General Document]
-[FileName: 3 words, nouns only, connected by underscores]
-"""
+    Output format (strict):
+    Category: one of Technical, Academic, Business, Legal, News, Creative, Personal, Instruction, Code, General Document  
+    FileName: 3~6 words, nouns/adjectives, underscore-separated, meaningful
+    """
 
     response = openai.chat.completions.create(
         model="gpt-4.1",
@@ -375,7 +382,7 @@ def map_reduce_summarize_spreadsheet_only(file_path, model_name="gpt-4.1", colum
             max_tokens=500
         )
         sub_summaries.append(summary)
-        time.sleep(0.3)  # Rate limit 보호용
+        time.sleep(0.8)  # Rate limit 보호용
 
     combined = "\n\n".join(sub_summaries)
 
@@ -388,7 +395,7 @@ def map_reduce_summarize_spreadsheet_only(file_path, model_name="gpt-4.1", colum
     )
 
     return final_summary
-
+# 사용
 def process_single_spreadsheet_mapreduce(file_path, silent=False, log_file=None):
     """
     Performs map-reduce summarization for a large spreadsheet,
@@ -433,7 +440,7 @@ def process_single_spreadsheet_mapreduce(file_path, silent=False, log_file=None)
         "category": category
     }
 
-
+# 사용중
 def process_spreadsheet_file(file_path, columns=[0, 1, 2], model="gpt-3.5-turbo"):
     if not os.path.exists(file_path):
         raise FileNotFoundError(f"{file_path} not found.")
@@ -452,7 +459,7 @@ def process_spreadsheet_file(file_path, columns=[0, 1, 2], model="gpt-3.5-turbo"
     sanitized_filename = sanitize_filename(filename_raw, max_words=3)
 
     return category, sanitized_filename
-
+# 미사용
 def process_single_spreadsheet(args, silent=False, log_file=None):
     """
     1) args = (file_path, None or placeholder)
@@ -504,7 +511,7 @@ def process_single_spreadsheet(args, silent=False, log_file=None):
         "description": summary,
         "category": "Spreadsheet"
     }
-
+# 미사용
 def map_reduce_spreadsheet(file_path, model_name="gpt-4.1", columns=[0,1,2], chunk_size=500):
     """
     1) Excel/CSV 로딩
@@ -514,7 +521,6 @@ def map_reduce_spreadsheet(file_path, model_name="gpt-4.1", columns=[0,1,2], chu
     """
     import pandas as pd
     import openai
-    import tiktoken
     import time
 
     # A. 스프레드시트 로딩
@@ -579,7 +585,7 @@ def map_reduce_spreadsheet(file_path, model_name="gpt-4.1", columns=[0,1,2], chu
     meta_system_prompt = (
         "You are an AI assistant that, given a summary of spreadsheet data, produces "
         "1) a short summary(<=150 chars), "
-        "2) one category from [Technical, Academic, Business, Legal, News/Article, Creative, Personal, Instruction/Guide, Code/Programming, General Document], "
+        "2) one category from [Technical, Academic, Business, Legal, News, Creative, Personal, Instruction, Code, General Document], "
         "3) a folder name(2 words, nouns), "
         "4) a file name(3 words, underscores)."
     )
