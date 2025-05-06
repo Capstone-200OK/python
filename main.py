@@ -3,6 +3,7 @@ import time
 import nltk
 import requests
 import tempfile
+from PyPDF2 import PdfReader
 
 from file_utils import (
     display_directory_tree,
@@ -194,6 +195,63 @@ def extract_files_from_tree(folder_tree):
             files.extend(extract_files_from_tree(sub))
     return files
 
+def read_text_file_by_extension(filepath):
+    import os
+    ext = os.path.splitext(filepath)[1].lower()
+
+    try:
+        if ext == '.pdf':
+            reader = PdfReader(filepath)
+            return "\n".join(page.extract_text() or "" for page in reader.pages)
+
+        elif ext in ['.xls', '.xlsx']:
+            import pandas as pd
+            df = pd.read_excel(filepath, sheet_name=None)
+            return "\n\n".join(
+                f"[Sheet: {name}]\n{sheet_df.head(10).to_string()}"
+                for name, sheet_df in df.items()
+            )
+
+        elif ext in ['.docx']:
+            from docx import Document
+            doc = Document(filepath)
+            return "\n".join(p.text for p in doc.paragraphs)
+
+        elif ext in ['.pptx']:
+            from pptx import Presentation
+            prs = Presentation(filepath)
+            text = []
+            for slide in prs.slides:
+                for shape in slide.shapes:
+                    if hasattr(shape, "text"):
+                        text.append(shape.text)
+            return "\n".join(text)
+
+        elif ext in ['.csv']:
+            import pandas as pd
+            df = pd.read_csv(filepath)
+            return df.head(20).to_string()
+
+        elif ext in ['.json']:
+            import json
+            with open(filepath, 'r', encoding='utf-8') as f:
+                data = json.load(f)
+                return json.dumps(data, indent=2)[:3000]  # 긴 JSON 자르기
+
+        elif ext in ['.txt', '.md', '.html', '.xml']:
+            with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                return f.read()
+
+        else:
+            # 확장자 불명 또는 직접 열어보기
+            with open(filepath, "r", encoding="utf-8", errors="ignore") as f:
+                return f.read()
+
+    except Exception as e:
+        print(f"[ERROR] Failed to read {filepath} ({ext}): {e}")
+        return None
+
+
 def do_auto_classification(folder_tree, destination_folder_id, mode="type", output_path="/organized"):
     """
     folder_tree: Spring Boot에서 전달받은 폴더 트리 JSON (FolderDTO 구조)
@@ -225,16 +283,12 @@ def do_auto_classification(folder_tree, destination_folder_id, mode="type", outp
         for f in file_list:
             fp = f.get("file_path")
             if fp and os.path.exists(fp):
-                text_content = None
-                try:
-                    with open(fp, "r", encoding="utf-8", errors="ignore") as file:
-                        text_content = file.read()
-                        print(f"[READ SUCCESS] {fp} ({measure_token_length(text_content)} tokens)")
-                except Exception as e:
-                    print(f"[ERROR] Failed to read {fp}: {e}")
-
+                text_content = read_text_file_by_extension(fp)
                 if text_content:
+                    print(f"[READ SUCCESS] {fp} ({measure_token_length(text_content)} tokens)")
                     text_tuples.append((fp, text_content))
+                else:
+                    print(f"[SKIPPED] {fp} could not be parsed.")
 
         data_images = process_image_files(image_files, file_list=file_list, silent=True, log_file=None)
         data_texts = process_text_files(text_tuples, file_list=file_list, silent=True, log_file=None)
@@ -242,14 +296,14 @@ def do_auto_classification(folder_tree, destination_folder_id, mode="type", outp
         renamed_files = set()
         processed_files = set()
         operations = compute_operations(all_data, output_path, renamed_files, processed_files)
-        for f in file_list:
-            local_path = f.get("file_path")
-            if local_path and os.path.exists(local_path):
-                try:
-                    os.remove(local_path)
-                    print(f"[CLEANUP] Deleted temp file: {local_path}")
-                except Exception as e:
-                    print(f"[ERROR] Failed to delete {local_path}: {e}")
+        # for f in file_list:
+        #     local_path = f.get("file_path")
+        #     if local_path and os.path.exists(local_path):
+        #         try:
+        #             os.remove(local_path)
+        #             print(f"[CLEANUP] Deleted temp file: {local_path}")
+        #         except Exception as e:
+        #             print(f"[ERROR] Failed to delete {local_path}: {e}")
     elif mode == "date":
         # date 모드: 날짜 기준 분류
         #file_paths = [f["file_path"] for f in file_list if f["file_path"]]
@@ -276,12 +330,10 @@ def do_auto_classification(folder_tree, destination_folder_id, mode="type", outp
     return result_dict
 
 def download_file_from_url(url):
-    """
-    S3 URL로부터 파일을 다운로드하고, 임시 로컬 경로를 반환한다.
-    """
     response = requests.get(url, stream=True)
     if response.status_code == 200:
-        temp_file = tempfile.NamedTemporaryFile(delete=False)
+        suffix = os.path.splitext(url)[1]  # 확장자 유지
+        temp_file = tempfile.NamedTemporaryFile(delete=False, suffix=suffix)
         for chunk in response.iter_content(chunk_size=8192):
             temp_file.write(chunk)
         temp_file.close()
@@ -289,6 +341,7 @@ def download_file_from_url(url):
     else:
         print(f"[ERROR] Failed to download file: {url}")
         return None
+
 
 def send_operations_to_spring(operations, user_id):
     """
