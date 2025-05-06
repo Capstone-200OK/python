@@ -217,7 +217,7 @@ def read_text_file_by_extension(filepath):
             doc = Document(filepath)
             return "\n".join(p.text for p in doc.paragraphs)
 
-        elif ext in ['.pptx']:
+        elif ext in ['.pptx', 'ppt']:
             from pptx import Presentation
             prs = Presentation(filepath)
             text = []

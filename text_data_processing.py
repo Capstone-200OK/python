@@ -6,7 +6,7 @@ import openai
 import tiktoken
 import pandas as pd
 from rich.progress import Progress, TextColumn, BarColumn, TimeElapsedColumn
-
+from pptx import Presentation
 from data_processing_common import sanitize_filename
 from gpt_utils import gpt_generate_text_single_prompt
 
@@ -315,7 +315,25 @@ def process_single_text_file(args, ext, silent=False, log_file=None):
                     **result,
                     "token_count": token_count
                 }
+        elif ext == '.pptx':
+            text = extract_text_from_pptx(file_path)
+            token_count = measure_token_length(text)
 
+            if token_count <= 30000:
+                category, filename = generate_category_and_filename_single_prompt(text)
+            else:
+                category, filename = map_reduce_category_and_filename(text)
+
+            sanitized_foldername = sanitize_filename(category, max_words=2)
+            sanitized_filename = sanitize_filename(filename, max_words=3)
+
+            return {
+                'file_path': file_path,
+                'token_count': token_count,
+                'foldername': sanitized_foldername,
+                'filename': sanitized_filename,
+                'category': category
+            }
         else:
             # (B) 일반 텍스트
             if token_count <= 30000:
@@ -439,7 +457,23 @@ def process_single_spreadsheet_mapreduce(file_path, silent=False, log_file=None)
         "filename": sanitized_filename,
         "category": category
     }
+def extract_text_from_pptx(filepath):
+    prs = Presentation(filepath)
+    slide_data = []
 
+    for i, slide in enumerate(prs.slides):
+        texts = []
+        for shape in slide.shapes:
+            if hasattr(shape, "text") and shape.text.strip():
+                texts.append(shape.text.strip())
+
+        has_image = any(shape.shape_type == 13 for shape in slide.shapes)  # 13 == PICTURE
+        slide_text = f"[Slide {i+1}]\n" + "\n".join(texts)
+        if has_image:
+            slide_text += "\n[이미지 포함됨]"
+        slide_data.append(slide_text)
+
+    return "\n\n".join(slide_data)
 # 사용중
 def process_spreadsheet_file(file_path, columns=[0, 1, 2], model="gpt-3.5-turbo"):
     if not os.path.exists(file_path):
