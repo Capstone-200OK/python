@@ -7,7 +7,7 @@ import tiktoken
 import pandas as pd
 from rich.progress import Progress, TextColumn, BarColumn, TimeElapsedColumn
 from pptx import Presentation
-from data_processing_common import sanitize_filename
+from data_processing_common import sanitize_filename, strip_category_prefix
 from gpt_utils import gpt_generate_text_single_prompt
 
 
@@ -216,7 +216,7 @@ def generate_category_and_filename_single_prompt(text):
 
     Output format (strictly two lines):
     Category: <one from allowed categories>
-    FileName: <descriptive, underscore_separated, 3~6 words, reflecting document content>
+    FileName: <descriptive, underscore_separated, 3~6 words, reflecting document content, no 'filename_', no 'file_', no 'document_>
     """
 
     response = gpt_generate_text_single_prompt(
@@ -253,7 +253,7 @@ def map_reduce_category_and_filename(text):
 
     Output format (strict):
     Category: one of Technical, Academic, Business, Legal, News, Creative, Personal, Instruction, Code, General Document  
-    FileName: 3~6 words, nouns/adjectives, underscore-separated, meaningful
+    FileName: 3~6 words, nouns/adjectives, underscore-separated, meaningful, no 'filename_', no 'file_', no 'document_
     """
 
     response = openai.chat.completions.create(
@@ -315,7 +315,7 @@ def process_single_text_file(args, ext, silent=False, log_file=None):
                     **result,
                     "token_count": token_count
                 }
-        elif ext == '.pptx':
+        elif ext in  ['.pptx', '.ppt']:
             text = extract_text_from_pptx(file_path)
             token_count = measure_token_length(text)
 
@@ -324,9 +324,9 @@ def process_single_text_file(args, ext, silent=False, log_file=None):
             else:
                 category, filename = map_reduce_category_and_filename(text)
 
-            sanitized_foldername = sanitize_filename(category, max_words=2)
+            sanitized_foldername = strip_category_prefix(category)
             sanitized_filename = sanitize_filename(filename, max_words=3)
-
+            category = strip_category_prefix(category)
             return {
                 'file_path': file_path,
                 'token_count': token_count,
@@ -342,8 +342,9 @@ def process_single_text_file(args, ext, silent=False, log_file=None):
                 category, filename = map_reduce_category_and_filename(text)
 
         # 폴더명, 파일명 정제
-        sanitized_foldername = sanitize_filename(category, max_words=2)
+        sanitized_foldername = strip_category_prefix(category)
         sanitized_filename = sanitize_filename(filename, max_words=3)
+        category = strip_category_prefix(category)
         progress.update(task_id, advance=1.0)
 
     end_time = time.time()
@@ -434,7 +435,8 @@ def process_single_spreadsheet_mapreduce(file_path, silent=False, log_file=None)
     # (B) 요약 → 카테고리 및 파일명 생성
     category, file_name_raw = generate_category_and_filename_single_prompt(summary)
     sanitized_filename = sanitize_filename(file_name_raw, max_words=3)
-
+    sanitized_foldername = strip_category_prefix(category)
+    category = strip_category_prefix(category)
     end_time = time.time()
     time_taken = end_time - start_time
 
@@ -455,7 +457,8 @@ def process_single_spreadsheet_mapreduce(file_path, silent=False, log_file=None)
     return {
         "file_path": file_path,
         "filename": sanitized_filename,
-        "category": category
+        "category": category,
+        "foldername":sanitized_foldername
     }
 def extract_text_from_pptx(filepath):
     prs = Presentation(filepath)

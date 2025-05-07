@@ -10,7 +10,8 @@ from dotenv import load_dotenv
 from rich.progress import Progress, TextColumn, BarColumn, TimeElapsedColumn
 from openai import OpenAI
 from PIL import Image
-from data_processing_common import sanitize_filename
+from data_processing_common import sanitize_filename, strip_category_prefix
+
 #from gensim.summarization import keywords
 
 load_dotenv()
@@ -448,7 +449,7 @@ def process_single_image(image_path, api_key=None, silent=False, log_file=None):
         )
 
         # 정제
-        sanitized_folder = sanitize_filename(category, max_words=2)
+        sanitized_folder = strip_category_prefix(category)
         sanitized_file = sanitize_filename(filename_raw, max_words=3)
 
         progress.update(task_id, advance=1.0)
