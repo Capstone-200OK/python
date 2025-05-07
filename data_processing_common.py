@@ -4,10 +4,17 @@ import datetime  # Import datetime for date operations
 from rich.progress import Progress, TextColumn, BarColumn, TimeElapsedColumn
 from dateutil import parser
 
+def strip_category_prefix(category_line: str) -> str:
+    if category_line.lower().startswith("category:"):
+        return category_line.split(":", 1)[1].strip()
+    return category_line.strip()
+
 def sanitize_filename(name, max_length=50, max_words=5):
     """Sanitize the filename by removing unwanted words and characters."""
     # Remove file extension if present
     name = os.path.splitext(name)[0]
+
+    name = re.sub(r'^(filename_|file_|document_|summary_|output_|result_)', '', name, flags=re.IGNORECASE)
     # Remove unwanted words and data type words
     name = re.sub(
         r'\b(jpg|jpeg|png|gif|bmp|txt|md|pdf|docx|xls|xlsx|csv|ppt|pptx|image|picture|photo|this|that|these|those|here|there|'

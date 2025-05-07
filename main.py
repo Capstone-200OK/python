@@ -280,8 +280,7 @@ def do_auto_classification(folder_tree, destination_folder_id, mode="type", outp
         print("text_files: {}".format(text_files))
         # 텍스트 파일의 경우 실제 내용 읽기
         text_tuples = []
-        for f in file_list:
-            fp = f.get("file_path")
+        for fp in text_files:
             if fp and os.path.exists(fp):
                 text_content = read_text_file_by_extension(fp)
                 if text_content:
