@@ -672,5 +672,6 @@ def process_text_files(text_tuples, file_list, silent=False, log_file=None):
             "size": original_info.get("size"),
             "createdAt": original_info.get("createdAt"),
         })
+        print("original_info.get(name) {}".format(original_info.get("name")))
         data_list.append(data)
     return data_list

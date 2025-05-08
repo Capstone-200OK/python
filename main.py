@@ -252,7 +252,7 @@ def read_text_file_by_extension(filepath):
         return None
 
 
-def do_auto_classification(folder_tree, destination_folder_id, mode="type", output_path="/organized"):
+def do_auto_classification(fileNameChange,folder_tree, destination_folder_id, mode="type", output_path="/organized"):
     """
     folder_tree: Spring Boot에서 전달받은 폴더 트리 JSON (FolderDTO 구조)
     mode: "content", "date", "type" 중 하나
@@ -294,7 +294,7 @@ def do_auto_classification(folder_tree, destination_folder_id, mode="type", outp
         all_data = data_images + data_texts
         renamed_files = set()
         processed_files = set()
-        operations = compute_operations(all_data, output_path, renamed_files, processed_files)
+        operations = compute_operations(fileNameChange, all_data, output_path, renamed_files, processed_files)
         # for f in file_list:
         #     local_path = f.get("file_path")
         #     if local_path and os.path.exists(local_path):

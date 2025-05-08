@@ -139,7 +139,7 @@ def process_files_by_type(file_infos, output_path, dry_run=False, silent=False, 
 
     return operations
 
-def compute_operations(data_list, new_path, renamed_files, processed_files):
+def compute_operations(file_name_change, data_list, new_path, renamed_files, processed_files):
     """Compute the file operations based on generated metadata."""
     operations = []
     for file_info in data_list:
@@ -151,7 +151,10 @@ def compute_operations(data_list, new_path, renamed_files, processed_files):
         # 폴더 이름과 새로운 파일 이름 구성
         folder_name = file_info['category']
         extension = os.path.splitext(file_info.get("name"))[1]  # 진짜 원래 이름 기준
-        base_filename = file_info.get("filename") or os.path.splitext(file_info.get("name"))[0]
+        if not file_name_change:
+            base_filename = file_info.get("filename") or os.path.splitext(file_info.get("name"))[0]
+        else :
+            base_filename = os.path.splitext(file_info.get("name"))[0]
         new_file_name = base_filename + extension
 
         # 디렉토리 및 새 경로 구성

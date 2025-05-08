@@ -47,6 +47,7 @@ def organize_folder():
     output_path = data['output_path']
     destination_folder_id = data['destinationFolderId']
     user_id = data['userId']
+    fileNameChange = data['fileNameChange']
     # A) 폴더 트리 조회 (Spring API 호출)
     print("folder_ids: ", folder_ids)
     if len(folder_ids) == 1:
@@ -62,7 +63,7 @@ def organize_folder():
             "isDeleted": False
         }
     # B) 자동 분류 실행 (mode에 따라)
-    result_dict = do_auto_classification(folder_tree,destination_folder_id,mode=mode, output_path=output_path)
+    result_dict = do_auto_classification(fileNameChange,folder_tree,destination_folder_id,mode=mode, output_path=output_path)
     result_dict["sourceFolderIds"] = folder_ids
     result_dict["userId"] = user_id
     print("✅ isScheduled 전달됨:", data.get("isScheduled"))
