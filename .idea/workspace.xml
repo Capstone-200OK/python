@@ -4,8 +4,9 @@
     <option name="autoReloadType" value="SELECTIVE" />
   </component>
   <component name="ChangeListManager">
-    <list default="true" id="35c0ef9d-1514-4f42-a209-0fc7428d67cd" name="변경" comment="&lt;perf&gt; (juho) ppt processing upgrade">
+    <list default="true" id="35c0ef9d-1514-4f42-a209-0fc7428d67cd" name="변경" comment="&lt;perf&gt; (juho) text data process upgrade">
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/app.py" beforeDir="false" afterPath="$PROJECT_DIR$/app.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/data_processing_common.py" beforeDir="false" afterPath="$PROJECT_DIR$/data_processing_common.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/image_data_processing.py" beforeDir="false" afterPath="$PROJECT_DIR$/image_data_processing.py" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/main.py" beforeDir="false" afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
@@ -150,7 +151,9 @@
       <workItem from="1746345342039" duration="18615000" />
       <workItem from="1746445169679" duration="6705000" />
       <workItem from="1746511536214" duration="10091000" />
-      <workItem from="1746589701864" duration="6243000" />
+      <workItem from="1746589701864" duration="9978000" />
+      <workItem from="1746627526183" duration="1205000" />
+      <workItem from="1746670117376" duration="4672000" />
     </task>
     <task id="LOCAL-00001" summary="commit">
       <option name="closed" value="true" />
@@ -320,7 +323,15 @@
       <option name="project" value="LOCAL" />
       <updated>1746537372535</updated>
     </task>
-    <option name="localTasksCounter" value="22" />
+    <task id="LOCAL-00022" summary="&lt;perf&gt; (juho) text data process upgrade">
+      <option name="closed" value="true" />
+      <created>1746598274741</created>
+      <option name="number" value="00022" />
+      <option name="presentableId" value="LOCAL-00022" />
+      <option name="project" value="LOCAL" />
+      <updated>1746598274742</updated>
+    </task>
+    <option name="localTasksCounter" value="23" />
     <servers />
   </component>
   <component name="TypeScriptGeneratedFilesManager">
@@ -400,11 +411,12 @@
     <MESSAGE value="&lt;fix&gt; (juho) big size file seperated" />
     <MESSAGE value="&lt;fix&gt; (juho) text File encode error fix" />
     <MESSAGE value="&lt;perf&gt; (juho) ppt processing upgrade" />
-    <option name="LAST_COMMIT_MESSAGE" value="&lt;perf&gt; (juho) ppt processing upgrade" />
+    <MESSAGE value="&lt;perf&gt; (juho) text data process upgrade" />
+    <option name="LAST_COMMIT_MESSAGE" value="&lt;perf&gt; (juho) text data process upgrade" />
   </component>
   <component name="com.intellij.coverage.CoverageDataManagerImpl">
     <SUITE FILE_PATH="coverage/PythonProject$image_data_processing.coverage" NAME="image_data_processing 커버리지 결과" MODIFIED="1743046322581" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
-    <SUITE FILE_PATH="coverage/PythonProject$main.coverage" NAME="main 커버리지 결과" MODIFIED="1746590570937" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
+    <SUITE FILE_PATH="coverage/PythonProject$main.coverage" NAME="main 커버리지 결과" MODIFIED="1746670187471" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="" />
     <SUITE FILE_PATH="coverage/PythonProject$gpt_utils.coverage" NAME="gpt_utils 커버리지 결과" MODIFIED="1742399202702" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
     <SUITE FILE_PATH="coverage/PythonProject$app.coverage" NAME="app 커버리지 결과" MODIFIED="1744831472560" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="false" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>

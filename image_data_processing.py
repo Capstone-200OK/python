@@ -494,5 +494,6 @@ def process_image_files(image_paths, file_list, api_key=None, silent=False, log_
             "size": original_info.get("size"),
             "createdAt": original_info.get("createdAt"),
         })
+        print("original_info.get(name) {}".format(original_info.get("name")))
         data_list.append(data)
     return data_list
