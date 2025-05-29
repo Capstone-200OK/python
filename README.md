@@ -7,46 +7,48 @@ Tired of digital clutter? Overwhelmed by disorganized files scattered across you
 Before:
 
 ```
-/home/user/messy_documents/
-├── IMG_20230515_140322.jpg
-├── IMG_20230516_083045.jpg
-├── IMG_20230517_192130.jpg
-├── budget_2023.xlsx
-├── meeting_notes_05152023.txt
-├── project_proposal_draft.docx
-├── random_thoughts.txt
-├── recipe_chocolate_cake.pdf
-├── scan0001.pdf
-├── vacation_itinerary.docx
-└── work_presentation.pptx
+Personal/뻐꾸기
+├── 콘텐츠 기획안.pdf
+├── 참고 논문 및 기사.pdf
+├── 영자 신문 기사 스크랩.docx
+├── 시사용어 정리.docx
+├── 아이디어 노트.docx
+├── 팀플 발표 자료.pptx
+├── 문학 작품 분석.docx
+├── 할 일 리스트.xlsx
+├── 뉴스 트렌드 정리.xlsx
+├── 기사 감상문.txt
+├── 감상일지.txt
+└── 팀플 회의록.txt
 
-0 directories, 11 files
+0 directories, 12 files
 ```
 
 After:
 
 ```
-/home/user/organized_documents/
-├── Financial
-│   └── 2023_Budget_Spreadsheet.xlsx
-├── Food_and_Recipes
-│   └── Chocolate_Cake_Recipe.pdf
-├── Meetings_and_Notes
-│   └── Team_Meeting_Notes_May_15_2023.txt
-├── Personal
-│   └── Random_Thoughts_and_Ideas.txt
-├── Photos
-│   ├── Cityscape_Sunset_May_17_2023.jpg
-│   ├── Morning_Coffee_Shop_May_16_2023.jpg
-│   └── Office_Team_Lunch_May_15_2023.jpg
-├── Travel
-│   └── Summer_Vacation_Itinerary_2023.docx
-└── Work
-    ├── Project_X_Proposal_Draft.docx
-    ├── Quarterly_Sales_Report.pdf
-    └── Marketing_Strategy_Presentation.pptx
+Personal/보관함
+├── Business
+│   └── 콘텐츠 기획안.pdf
+├── News
+│   ├── 영자 신문 기사 스크랩.docx
+|   └── 뉴스 트랜드 정리.xlsx
+├── Instruction
+│   └── 시사용어 정리.docx
+├── Creative
+│   └── 아이디어 노트.docx
+├── Academic
+│   ├── 팀플 발표 자료.pptx
+│   ├── 문학 작품 분석.docx
+│   ├── 할 일 리스트.xlsx
+│   ├── 기사 감상문.txt
+│   └── 참고 논문 및 기사.pdf
+├── General Document
+│   └── 팀플 회의록.txt
+└── Personal
+    └── 감상일지.txt
 
-7 directories, 11 files
+7 directories, 12 files
 ```
 
 ## Basic enviroment 
@@ -107,17 +109,11 @@ conda activate local_file_organizer
    pip install -r requirements.txt
    ```
 
-**Note:** If you encounter issues with any packages, install them individually:
-
-```zsh
-pip install nexa Pillow pytesseract PyMuPDF python-docx
-```
-
 With the environment activated and dependencies installed, run the script using:
 
 ### 5. Running the Script🎉
 ```zsh
-python main.py
+python app.py
 ```
 
 ## License
