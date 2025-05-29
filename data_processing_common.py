@@ -121,7 +121,7 @@ def process_files_by_type(file_infos, output_path, dry_run=False, silent=False, 
         # Create directory path
         dir_path = "/".join([output_path.strip("/"), folder_name.strip("/")])
         # Prepare new file path
-        new_file_name = os.path.basename(file_path)
+        new_file_name = file_info.get("name", os.path.basename(file_path))
         new_file_path = "/".join([dir_path, new_file_name])
         # Decide whether to use hardlink or symlink
         link_type = 'hardlink'  # Assume hardlink for now

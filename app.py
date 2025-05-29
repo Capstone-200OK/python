@@ -89,13 +89,18 @@ def generate_thumbnail():
     print("[DEBUG] LibreOffice 경로:", libreoffice_path)
     data = request.json
     file_url = data['fileUrl']
-    file_name = secure_filename(data['fileName'])
+    print("1. fileName: ", data['fileName'])
+    file_name = data['fileName']
 
     base_name = file_name.rsplit('.', 1)[0]
     ext = file_name.split('.')[-1].lower()
     hash_part = hashlib.md5(file_name.encode()).hexdigest()[:8]
     thumb_name = f"thumb_{base_name}_{hash_part}.jpg"
-
+    print("fileName.encode: ", file_name.encode())
+    print("fileName: ", file_name)
+    print("hash_part: ", hash_part)
+    print("base_name: ", base_name)
+    print("thumb_name: ", thumb_name)
     response = requests.get(file_url)
     img = None
 
