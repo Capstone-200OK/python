@@ -18,7 +18,17 @@ import subprocess
 import hashlib
 from PIL import Image, ImageDraw, ImageFont
 
+import sys
+
+try:
+    sys.stdout.reconfigure(encoding="utf-8", errors="replace")
+    sys.stderr.reconfigure(encoding="utf-8", errors="replace")
+except Exception:
+    pass
+
 app = Flask(__name__)
+
+app.logger.setLevel("INFO")
 
 libreoffice_path = os.getenv("LIBREOFFICE_PATH")
 poppler_path=os.getenv("POPPLER_PATH")
@@ -86,21 +96,21 @@ def organize_folder():
 
 @app.route('/api/thumbnail', methods=['POST'])
 def generate_thumbnail():
-    print("[DEBUG] LibreOffice 경로:", libreoffice_path)
+    app.logger.info("LibreOffice path: %s", libreoffice_path)
     data = request.json
     file_url = data['fileUrl']
-    print("1. fileName: ", data['fileName'])
+    app.logger.info("1. fileName: %s", data['fileName'])
     file_name = data['fileName']
 
     base_name = file_name.rsplit('.', 1)[0]
     ext = file_name.split('.')[-1].lower()
     hash_part = hashlib.md5(file_name.encode()).hexdigest()[:8]
     thumb_name = f"thumb_{base_name}_{hash_part}.jpg"
-    print("fileName.encode: ", file_name.encode())
-    print("fileName: ", file_name)
-    print("hash_part: ", hash_part)
-    print("base_name: ", base_name)
-    print("thumb_name: ", thumb_name)
+    app.logger.info("fileName.encode: %s", file_name.encode())
+    app.logger.info("fileName: %s", file_name)
+    app.logger.info("hash_part: %s", hash_part)
+    app.logger.info("base_name: %s", base_name)
+    app.logger.info("thumb_name: %s", thumb_name)
     response = requests.get(file_url)
     img = None
 
@@ -131,8 +141,8 @@ def generate_thumbnail():
                     "--outdir", tmpdir,
                     input_path
                 ], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-                print("[LibreOffice stdout]", result.stdout)
-                print("[LibreOffice stderr]", result.stderr)
+                app.logger.info("[LibreOffice stdout] %s", result.stdout)
+                app.logger.info("[LibreOffice stderr] %s", result.stderr)
             except subprocess.CalledProcessError as e:
                 print("[LibreOffice 오류]", e.stderr)
                 return jsonify({"error": f"LibreOffice 변환 실패: {e.stderr}"}), 500
